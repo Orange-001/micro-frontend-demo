@@ -1,0 +1,27 @@
+/* 
+  Iconfont 占位样式：
+  运行时允许缺失字体文件，但保留 iconfont 的 class 约定与引入方式。
+*/
+
+@font-face {
+  font-family: "iconfont";
+  src: url("./iconfont.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: inherit;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* 示例：实际项目中可替换为你们的 iconfont 生成的 glyph 映射 */
+.icon-placeholder:before {
+  content: "\e600";
+}
+

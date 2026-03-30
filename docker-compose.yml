@@ -1,0 +1,28 @@
+services:
+  host:
+    build:
+      context: .
+      dockerfile: apps/host/Dockerfile
+      args:
+        VITE_VUE_ENTRY: "http://vue-child/"
+        VITE_REACT_ENTRY: "http://react-child/"
+    ports:
+      - "8080:80"
+    depends_on:
+      - vue-child
+      - react-child
+
+  vue-child:
+    build:
+      context: .
+      dockerfile: apps/vue-child/Dockerfile
+    ports:
+      - "8081:80"
+
+  react-child:
+    build:
+      context: .
+      dockerfile: apps/react-child/Dockerfile
+    ports:
+      - "8082:80"
+

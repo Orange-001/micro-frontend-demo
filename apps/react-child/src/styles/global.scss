@@ -1,0 +1,43 @@
+.page {
+  padding: 0;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.head {
+  margin: 0;
+}
+
+.content {
+  margin-top: 12px;
+  padding: 0 2px 14px;
+}
+
+.view h2 {
+  margin-top: 0;
+}
+
+.link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.btn {
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  padding: 8px 12px;
+}
+

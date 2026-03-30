@@ -1,0 +1,31 @@
+{
+  "name": "micro-frontend-vue-react",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev": "concurrently -n HOST,VUE,REACT -c cyan,green,magenta \"pnpm --filter @mfe/host dev\" \"pnpm --filter @mfe/vue-child dev\" \"pnpm --filter @mfe/react-child dev\"",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "format": "prettier -w .",
+    "preview": "pnpm --filter @mfe/host preview"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "concurrently": "^9.0.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-vue": "^9.26.0",
+    "less": "^4.2.0",
+    "playwright": "1.58.2",
+    "prettier": "^3.3.3",
+    "sass": "^1.77.8",
+    "typescript": "^5.6.3",
+    "vue-eslint-parser": "^9.4.1"
+  }
+}

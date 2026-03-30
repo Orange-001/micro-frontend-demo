@@ -1,0 +1,31 @@
+{
+  "name": "@mfe/vue-child",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3001",
+    "build": "vite build",
+    "lint": "eslint \"src/**/*.{ts,js,vue}\""
+  },
+  "dependencies": {
+    "@mfe/shared": "workspace:*",
+    "element-plus": "^2.10.8",
+    "vue-demi": "^0.14.10",
+    "pinia": "^2.2.4",
+    "vue": "^3.4.31",
+    "vue-router": "^4.4.2"
+  },
+  "devDependencies": {
+    "@unocss/preset-uno": "^66.6.7",
+    "@unocss/vite": "^66.6.7",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "unocss": "^66.6.7",
+    "vite": "^5.4.2",
+    "eslint-plugin-vue": "^9.26.0",
+    "vite-plugin-qiankun": "^1.0.15",
+    "qiankun": "^2.10.16",
+    "sass": "^1.77.8"
+  }
+}
+
