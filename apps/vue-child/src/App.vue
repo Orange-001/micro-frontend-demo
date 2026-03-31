@@ -3,10 +3,10 @@
     <div class="card head">
       <div style="display: flex; align-items: center; justify-content: space-between; gap: 12">
         <div style="font-weight: 700">Vue 子应用（Pinia + Vue Router）</div>
-        <div style="display: flex; align-items: center; gap: 10">
-          <i class="iconfont icon-placeholder" aria-hidden="true" style="fontSize: 18px" />
-          <router-link to="/" class="link">首页</router-link>
-          <router-link to="/about" class="link">关于</router-link>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <i class="iconfont icon-placeholder" aria-hidden="true" style="fontsize: 18px" />
+          <router-link to="/" class="link"> 首页 </router-link>
+          <router-link to="/about" class="link"> 关于 </router-link>
         </div>
       </div>
     </div>
@@ -14,8 +14,8 @@
     <div class="card" style="margin-top: 12px">
       <h3 style="margin-top: 0">Pinia 示例</h3>
       <div style="display: flex; align-items: center; gap: 12">
-        <div style="fontSize: 18px">count: {{ counter.count }}</div>
-        <el-button type="primary" @click="addWithMessage">+1</el-button>
+        <div style="fontsize: 18px">count: {{ counter.count }}</div>
+        <el-button type="primary" @click="addWithMessage"> +1 </el-button>
       </div>
     </div>
 
@@ -39,8 +39,7 @@ const addWithMessage = () => {
   ElMessage({
     type: 'success',
     message: 'vue-child: 调用了 Element Plus ElMessage',
-    appendTo: mountContainer ?? document.body
+    appendTo: mountContainer ?? document.body,
   });
 };
 </script>
-

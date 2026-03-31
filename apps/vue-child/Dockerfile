@@ -3,7 +3,10 @@ WORKDIR /app
 
 RUN corepack enable
 
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+ARG VITE_APP_BASE
+ENV VITE_APP_BASE=${VITE_APP_BASE}
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
 
@@ -12,7 +15,7 @@ RUN pnpm --filter @mfe/vue-child build
 
 FROM nginx:1.27-alpine
 COPY --from=build /app/apps/vue-child/dist /usr/share/nginx/html
-COPY ../../docker/nginx/spa.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx/spa.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

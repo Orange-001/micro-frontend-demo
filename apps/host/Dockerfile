@@ -10,7 +10,7 @@ ARG VITE_REACT_ENTRY
 ENV VITE_VUE_ENTRY=${VITE_VUE_ENTRY}
 ENV VITE_REACT_ENTRY=${VITE_REACT_ENTRY}
 
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY apps ./apps
 COPY packages ./packages
 
@@ -19,7 +19,7 @@ RUN pnpm --filter @mfe/host build
 
 FROM nginx:1.27-alpine
 COPY --from=build /app/apps/host/dist /usr/share/nginx/html
-COPY ../../docker/nginx/spa.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx/spa.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
