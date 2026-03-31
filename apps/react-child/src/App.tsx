@@ -5,6 +5,7 @@ import { RootState } from './store';
 import { increment } from './store/counterSlice';
 import { HomeView } from './views/HomeView';
 import { AboutView } from './views/AboutView';
+import { Wrapper } from './App.styles';
 
 export function App() {
   const dispatch = useDispatch();
@@ -15,50 +16,49 @@ export function App() {
     <>
       {contextHolder}
       <HashRouter>
-        <div className="page p-4">
-        <div className="card head">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <div style={{ fontWeight: 700 }}>React 子应用（Redux + React Router）</div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <i className="iconfont icon-placeholder" aria-hidden="true" style={{ fontSize: 18 }} />
-              <NavLink to="/" className="link">
-                首页
-              </NavLink>
-              <NavLink to="/about" className="link">
-                关于
-              </NavLink>
+        <Wrapper>
+          <div className="card head">
+            <div className="head-row">
+              <div className="brand">React 子应用（Redux + React Router）</div>
+              <div className="nav-links">
+                <i className="iconfont icon-placeholder" aria-hidden="true" style={{ fontSize: 18 }} />
+                <NavLink className="nav-link" to="/" end>
+                  首页
+                </NavLink>
+                <NavLink className="nav-link" to="/about">
+                  关于
+                </NavLink>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="card" style={{ marginTop: 12 }}>
-          <h3 style={{ marginTop: 0 }}>Redux 示例</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 18 }}>count: {value}</div>
-            <Button
-              type="primary"
-              onClick={() => {
-                dispatch(increment());
-                messageApi.open({
-                  type: 'success',
-                  content: 'react-child: 调用了 antd message'
-                });
-              }}
-            >
-              +1
-            </Button>
+          <div className="card counter-card">
+            <h3 className="card-title">Redux 示例</h3>
+            <div className="counter-row">
+              <div className="counter-value">count: {value}</div>
+              <Button
+                type="primary"
+                onClick={() => {
+                  dispatch(increment());
+                  messageApi.open({
+                    type: 'success',
+                    content: 'react-child: 调用了 antd message'
+                  });
+                }}
+              >
+                +1
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div className="content">
-          <Routes>
-            <Route path="/" element={<HomeView />} />
-            <Route path="/about" element={<AboutView />} />
-          </Routes>
-        </div>
-      </div>
+          <div className="content">
+            <Routes>
+              <Route path="/" element={<HomeView />} />
+              <Route path="/about" element={<AboutView />} />
+            </Routes>
+          </div>
+        </Wrapper>
       </HashRouter>
     </>
   );
 }
-

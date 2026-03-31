@@ -1,25 +1,25 @@
 import { Link, NavLink } from 'react-router-dom';
+import { Wrapper } from './TopNav.styles';
 
 export function TopNav() {
   return (
-    <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <div style={{ fontWeight: 700 }}>MFE Host</div>
+    <Wrapper>
+      <div className="brand">MFE Host</div>
       <div style={{ flex: 1 }} />
-      <nav style={{ display: 'flex', gap: 12 }}>
-        <NavLink to="/" end style={{ color: '#fff', opacity: 0.85 }}>
+      <nav className="nav-links">
+        <NavLink className="nav-link" to="/" end>
           首页
         </NavLink>
-        <NavLink to="/vue" style={{ color: '#fff', opacity: 0.85 }}>
+        <NavLink className="nav-link" to="/vue">
           Vue 子应用
         </NavLink>
-        <NavLink to="/react" style={{ color: '#fff', opacity: 0.85 }}>
+        <NavLink className="nav-link" to="/react">
           React 子应用
         </NavLink>
       </nav>
       <Link to="/" aria-label="home" style={{ display: 'none' }}>
         home
       </Link>
-    </div>
+    </Wrapper>
   );
 }
-

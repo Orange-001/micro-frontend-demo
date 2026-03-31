@@ -9,6 +9,7 @@ import { ReactRoute } from './pages/ReactRoute';
 import { RootState } from './store';
 import { increment } from './store/counterSlice';
 import { startQiankun } from './micro-apps';
+import { Wrapper } from './App.styles';
 
 export function App() {
   const dispatch = useDispatch();
@@ -22,15 +23,15 @@ export function App() {
   return (
     <>
       {contextHolder}
-      <div className="p-4" style={{ maxWidth: 1100, margin: '24px auto', padding: 16 }}>
+      <Wrapper $highlight={value >= 10}>
         <TopNav />
-        <div style={{ height: 16 }} />
+        <div className="spacer" />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+        <div className="grid">
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>Host Redux 示例</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontSize: 18 }}>count: {value}</div>
+            <h3 className="card-title">Host Redux 示例</h3>
+            <div className="counter-row">
+              <div className="counter-value">count: {value}</div>
               <Button
                 type="primary"
                 onClick={() => {
@@ -53,22 +54,11 @@ export function App() {
             <Route path="/react" element={<ReactRoute />} />
           </Routes>
 
-          <div
-            id="micro-viewport"
-            style={{
-              minHeight: 420,
-              padding: 0,
-              overflow: 'hidden',
-              background: 'transparent',
-              border: 'none',
-              borderRadius: 0
-            }}
-          >
-            <div style={{ padding: 16, opacity: 0.7 }}>子应用区域：等待 qiankun 挂载</div>
+          <div className="micro-viewport" id="micro-viewport">
+            <div className="placeholder">子应用区域：等待 qiankun 挂载</div>
           </div>
         </div>
-      </div>
+      </Wrapper>
     </>
   );
 }
-

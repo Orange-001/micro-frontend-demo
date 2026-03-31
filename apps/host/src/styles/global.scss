@@ -1,5 +1,4 @@
 $bg: #0b1020;
-$card: rgba(255, 255, 255, 0.06);
 $text: rgba(255, 255, 255, 0.92);
 
 html,
@@ -19,11 +18,3 @@ body {
 * {
   box-sizing: border-box;
 }
-
-.card {
-  background: $card;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 16px;
-}
-
