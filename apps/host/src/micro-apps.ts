@@ -11,6 +11,7 @@ export function startQiankun() {
   if (qiankunStarted) return;
   qiankunStarted = true;
 
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   const vueEntry = getEnvUrl('VITE_VUE_ENTRY', 'http://localhost:3001/');
   const reactEntry = getEnvUrl('VITE_REACT_ENTRY', 'http://localhost:3002/');
 
@@ -19,13 +20,13 @@ export function startQiankun() {
       name: 'vue-child',
       entry: vueEntry,
       container: '#micro-viewport',
-      activeRule: '/vue'
+      activeRule: `${base}/vue`
     },
     {
       name: 'react-child',
       entry: reactEntry,
       container: '#micro-viewport',
-      activeRule: '/react'
+      activeRule: `${base}/react`
     }
   ]);
 

@@ -9,6 +9,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true
-  }
+  },
+  base: process.env.VITE_APP_BASE || '/'
 });
 
