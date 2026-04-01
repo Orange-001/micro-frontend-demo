@@ -38,13 +38,17 @@ export function App() {
                   dispatch(increment());
                   messageApi.open({
                     type: 'success',
-                    content: 'host: 调用了 antd message'
+                    content: 'host: 调用了 antd message',
                   });
                 }}
               >
                 +1
               </Button>
-              <i className="iconfont icon-placeholder" aria-hidden="true" style={{ fontSize: 18 }} />
+              <i
+                className="iconfont icon-placeholder"
+                aria-hidden="true"
+                style={{ fontSize: 18 }}
+              />
             </div>
           </div>
 

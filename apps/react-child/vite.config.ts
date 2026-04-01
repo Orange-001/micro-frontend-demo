@@ -9,14 +9,13 @@ export default defineConfig({
     react(),
     UnoCSS(),
     qiankun('react-child', {
-      useDevMode: true
+      useDevMode: true,
     }),
-    cssInjectedByJsPlugin()
+    cssInjectedByJsPlugin(),
   ],
   server: {
     strictPort: true,
-    port: 3002
+    port: 3002,
   },
-  base: process.env.VITE_APP_BASE || '/'
+  base: process.env.VITE_APP_BASE || '/',
 });
-

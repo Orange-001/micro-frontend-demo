@@ -13,14 +13,15 @@ let root: Root | null = null;
 function render(props: any) {
   const container: HTMLElement = props?.container ?? document.getElementById('root')!;
   container.innerHTML = '';
-  container.innerHTML = '<div style="padding:16px;opacity:.8">[react-child] mount() called...</div>';
+  container.innerHTML =
+    '<div style="padding:16px;opacity:.8">[react-child] mount() called...</div>';
   root = createRoot(container);
   root.render(
     <Provider store={store}>
-      <AntProvider hashId="react-child-antd" microContainer={container}>
+      <AntProvider microContainer={container}>
         <App />
       </AntProvider>
-    </Provider>
+    </Provider>,
   );
 }
 
@@ -34,10 +35,10 @@ renderWithQiankun({
   unmount() {
     root?.unmount();
     root = null;
-  }
+  },
+  update() {},
 });
 
 if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
   render({});
 }
-

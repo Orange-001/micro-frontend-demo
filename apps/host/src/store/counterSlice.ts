@@ -5,7 +5,7 @@ type CounterState = {
 };
 
 const initialState: CounterState = {
-  value: 0
+  value: 0,
 };
 
 const counterSlice = createSlice({
@@ -17,10 +17,9 @@ const counterSlice = createSlice({
     },
     add(state, action: PayloadAction<number>) {
       state.value += action.payload;
-    }
-  }
+    },
+  },
 });
 
 export const { increment, add } = counterSlice.actions;
 export const counterReducer = counterSlice.reducer;
-

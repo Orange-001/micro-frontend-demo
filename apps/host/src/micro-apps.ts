@@ -20,22 +20,21 @@ export function startQiankun() {
       name: 'vue-child',
       entry: vueEntry,
       container: '#micro-viewport',
-      activeRule: `${base}/vue`
+      activeRule: `${base}/vue`,
     },
     {
       name: 'react-child',
       entry: reactEntry,
       container: '#micro-viewport',
-      activeRule: `${base}/react`
-    }
+      activeRule: `${base}/react`,
+    },
   ]);
 
   start({
     sandbox: {
-      experimentalStyleIsolation: true
+      experimentalStyleIsolation: true,
     },
     // 也可以根据需要开预加载
-    prefetch: false
+    prefetch: false,
   });
 }
-

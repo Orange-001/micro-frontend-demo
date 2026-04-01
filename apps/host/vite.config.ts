@@ -5,11 +5,10 @@ import UnoCSS from '@unocss/vite';
 export default defineConfig({
   plugins: [react(), UnoCSS()],
   server: {
-    strictPort: true
+    strictPort: true,
   },
   build: {
-    sourcemap: true
+    sourcemap: true,
   },
-  base: process.env.VITE_APP_BASE || '/'
+  base: process.env.VITE_APP_BASE || '/',
 });
-

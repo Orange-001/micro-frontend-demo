@@ -41,7 +41,9 @@ export const Wrapper = styled.div<WrapperProps>`
     font-size: 18px;
     color: ${({ $highlight }) => ($highlight ? '#f5222d' : 'inherit')};
     font-weight: ${({ $highlight }) => ($highlight ? 700 : 400)};
-    transition: color 0.3s, font-weight 0.3s;
+    transition:
+      color 0.3s,
+      font-weight 0.3s;
   }
 
   .micro-viewport {

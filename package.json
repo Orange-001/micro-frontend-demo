@@ -10,6 +10,11 @@
     "preview": "pnpm --filter @mfe/host preview",
     "build:ghpages": "bash scripts/build-ghpages.sh"
   },
+  "pnpm": {
+    "overrides": {
+      "eslint": "^8.57.1"
+    }
+  },
   "devDependencies": {
     "@playwright/test": "1.58.2",
     "@typescript-eslint/eslint-plugin": "^7.18.0",

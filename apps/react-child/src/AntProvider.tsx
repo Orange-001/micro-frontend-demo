@@ -4,20 +4,19 @@ import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;
-  hashId: string;
   microContainer: HTMLElement;
 };
 
-export function AntProvider({ children, hashId, microContainer }: Props) {
+export function AntProvider({ children, microContainer }: Props) {
   return (
-    <StyleProvider hashId={hashId} hashPriority="high">
+    <StyleProvider hashPriority="high">
       <ConfigProvider
         getPopupContainer={() => microContainer}
         theme={{
           token: {
             // 子应用主色：用于验证 host 与 react-child 主题隔离
-            colorPrimary: '#ff4d4f'
-          }
+            colorPrimary: '#ff4d4f',
+          },
         }}
       >
         {children}
@@ -25,4 +24,3 @@ export function AntProvider({ children, hashId, microContainer }: Props) {
     </StyleProvider>
   );
 }
-

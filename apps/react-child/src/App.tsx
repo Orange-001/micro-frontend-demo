@@ -21,7 +21,11 @@ export function App() {
             <div className="head-row">
               <div className="brand">React 子应用（Redux + React Router）</div>
               <div className="nav-links">
-                <i className="iconfont icon-placeholder" aria-hidden="true" style={{ fontSize: 18 }} />
+                <i
+                  className="iconfont icon-placeholder"
+                  aria-hidden="true"
+                  style={{ fontSize: 18 }}
+                />
                 <NavLink className="nav-link" to="/" end>
                   首页
                 </NavLink>
@@ -42,7 +46,7 @@ export function App() {
                   dispatch(increment());
                   messageApi.open({
                     type: 'success',
-                    content: 'react-child: 调用了 antd message'
+                    content: 'react-child: 调用了 antd message',
                   });
                 }}
               >

@@ -4,6 +4,6 @@
     "types": ["vite/client"],
     "moduleResolution": "Bundler"
   },
-  "include": ["src"]
+  "include": ["src", "env.d.ts"]
 }
 

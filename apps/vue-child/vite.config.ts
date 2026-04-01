@@ -9,14 +9,13 @@ export default defineConfig({
     vue(),
     UnoCSS(),
     qiankun('vue-child', {
-      useDevMode: true
+      useDevMode: true,
     }),
-    cssInjectedByJsPlugin()
+    cssInjectedByJsPlugin(),
   ],
   server: {
     strictPort: true,
-    port: 3001
+    port: 3001,
   },
-  base: process.env.VITE_APP_BASE || '/'
+  base: process.env.VITE_APP_BASE || '/',
 });
-

@@ -22,10 +22,11 @@
     "styled-components": "^6.3.12"
   },
   "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
     "@unocss/preset-uno": "^66.6.7",
     "@unocss/vite": "^66.6.7",
     "@vitejs/plugin-react": "^4.3.1",
-    "eslint-plugin-react-hooks": "^5.1.0",
     "sass": "^1.77.8",
     "unocss": "^66.6.7",
     "vite": "^5.4.2",

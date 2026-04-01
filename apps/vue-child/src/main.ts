@@ -51,10 +51,10 @@ renderWithQiankun({
       elementPlusStyleEl.parentNode.removeChild(elementPlusStyleEl);
     }
     elementPlusStyleEl = null;
-  }
+  },
+  update() {},
 });
 
 if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
   render({});
 }
-

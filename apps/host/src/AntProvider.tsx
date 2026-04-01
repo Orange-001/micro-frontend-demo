@@ -4,14 +4,13 @@ import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;
-  hashId: string;
   // 控制弹层挂载，避免微前端场景弹出框跑到错误容器
-  getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
+  getPopupContainer?: (triggerNode?: HTMLElement) => HTMLElement;
 };
 
-export function AntProvider({ children, hashId, getPopupContainer }: Props) {
+export function AntProvider({ children, getPopupContainer }: Props) {
   return (
-    <StyleProvider hashId={hashId} hashPriority="high">
+    <StyleProvider hashPriority="high">
       <ConfigProvider
         getPopupContainer={
           getPopupContainer ??
@@ -22,8 +21,8 @@ export function AntProvider({ children, hashId, getPopupContainer }: Props) {
         theme={{
           token: {
             // Host 默认主色（用于验证不同子应用主题隔离）
-            colorPrimary: '#1677ff'
-          }
+            colorPrimary: '#1677ff',
+          },
         }}
       >
         {children}
@@ -31,4 +30,3 @@ export function AntProvider({ children, hashId, getPopupContainer }: Props) {
     </StyleProvider>
   );
 }
-
