@@ -45,7 +45,7 @@ export function App() {
                 +1
               </Button>
               <i
-                className="iconfont icon-placeholder"
+                className="host-iconfont host-icon-cangshu"
                 aria-hidden="true"
                 style={{ fontSize: 18 }}
               />

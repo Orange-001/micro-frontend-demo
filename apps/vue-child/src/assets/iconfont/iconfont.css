@@ -1,0 +1,41 @@
+@font-face {
+  font-family: "vc-iconfont"; /* Project id 5121607 */
+  /* Color fonts */
+  src: 
+       url('iconfont.woff2?t=1775032018652') format('woff2'),
+       url('iconfont.woff?t=1775032018652') format('woff'),
+       url('iconfont.ttf?t=1775032018652') format('truetype');
+}
+
+.vc-iconfont {
+  font-family: "vc-iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.vc-icon-same:before {
+  content: "\e601";
+}
+
+.vc-icon-danbaifen:before {
+  content: "\101ea";
+}
+
+.vc-icon-bangqiu:before {
+  content: "\101eb";
+}
+
+.vc-icon-baolingqiu:before {
+  content: "\101ec";
+}
+
+.vc-icon-shejian:before {
+  content: "\101ed";
+}
+
+.vc-icon-qugunqiu:before {
+  content: "\101ee";
+}
+

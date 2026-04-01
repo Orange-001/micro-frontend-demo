@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { store } from './store';
 import '@mfe/shared/iconfont.css';
+import './assets/iconfont/iconfont.css';
 import 'uno.css';
 import { AntProvider } from './AntProvider';
 import './styles/global.scss';

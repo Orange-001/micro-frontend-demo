@@ -74,3 +74,43 @@ export default defineConfig({
   ]
 });
 ```
+
+---
+
+## 6. 子应用 @font-face 被 qiankun 样式隔离 scope 后字体不加载
+
+**现象**：子应用（react-child / vue-child）的 iconfont 图标不显示，host 主应用的图标正常。
+
+**原因**：qiankun 启用了 `experimentalStyleIsolation: true`，会给子应用 CSS 加上作用域前缀（如 `div[data-qiankun-react-child]`）。`@font-face` 是全局声明，不支持被 scope，浏览器直接忽略被包裹后的 `@font-face`，导致字体文件不加载。此外，即使手动注入 `@font-face`，Vite 的静态资源 import 返回的是相对路径（如 `/src/assets/iconfont/iconfont.woff2`），在 qiankun 环境下会解析到主应用域名而非子应用的 dev server，同样导致 404。
+
+**修复**：用 `new URL(path, import.meta.url).href` 获取包含子应用 origin 的绝对 URL，然后在 `render()` 中手动创建 `<style>` 注入到 `document.head`，绕过 qiankun 的样式隔离：
+```ts
+// 在模块顶层获取绝对 URL
+const woff2Url = new URL('./assets/iconfont/iconfont.woff2', import.meta.url).href;
+const woffUrl = new URL('./assets/iconfont/iconfont.woff', import.meta.url).href;
+const ttfUrl = new URL('./assets/iconfont/iconfont.ttf', import.meta.url).href;
+
+let fontStyleEl: HTMLStyleElement | null = null;
+
+function render(props: any) {
+  // ...
+  if (!fontStyleEl) {
+    fontStyleEl = document.createElement('style');
+    fontStyleEl.setAttribute('data-mfe-style', 'xxx-iconfont');
+    fontStyleEl.textContent = `
+@font-face {
+  font-family: "xxx-iconfont";
+  src: url('${woff2Url}') format('woff2'),
+       url('${woffUrl}') format('woff'),
+       url('${ttfUrl}') format('truetype');
+}`;
+    document.head.appendChild(fontStyleEl);
+  }
+}
+
+// unmount 时移除
+function unmount() {
+  fontStyleEl?.parentNode?.removeChild(fontStyleEl);
+  fontStyleEl = null;
+}
+```

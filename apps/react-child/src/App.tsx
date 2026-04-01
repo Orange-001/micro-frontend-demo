@@ -22,7 +22,7 @@ export function App() {
               <div className="brand">React 子应用（Redux + React Router）</div>
               <div className="nav-links">
                 <i
-                  className="iconfont icon-placeholder"
+                  className="rc-iconfont rc-icon-shengdanmilu"
                   aria-hidden="true"
                   style={{ fontSize: 18 }}
                 />
