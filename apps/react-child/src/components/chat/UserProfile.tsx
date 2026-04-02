@@ -1,6 +1,8 @@
-import { Avatar } from 'antd';
-import { UserOutlined, SettingOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import { Avatar, Button, Tooltip } from 'antd';
+import { UserOutlined, BulbOutlined } from '@ant-design/icons';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { MemoryPanel } from './MemoryPanel';
 import styled from 'styled-components';
 
 const ProfileWrapper = styled.div`
@@ -21,11 +23,23 @@ const UserName = styled.span`
 `;
 
 export function UserProfile() {
+  const [memoryOpen, setMemoryOpen] = useState(false);
+
   return (
     <ProfileWrapper>
       <Avatar size={28} icon={<UserOutlined />} style={{ background: 'var(--accent-color)' }} />
       <UserName>User</UserName>
+      <Tooltip title="Memory">
+        <Button
+          type="text"
+          icon={<BulbOutlined />}
+          onClick={() => setMemoryOpen(true)}
+          size="small"
+          style={{ color: 'var(--text-secondary)' }}
+        />
+      </Tooltip>
       <ThemeToggle />
+      <MemoryPanel open={memoryOpen} onClose={() => setMemoryOpen(false)} />
     </ProfileWrapper>
   );
 }

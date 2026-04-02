@@ -36,6 +36,8 @@ export type StreamStatus = 'idle' | 'connecting' | 'streaming' | 'done' | 'error
 
 export type Reaction = 'like' | 'dislike' | null;
 
+export type APIProvider = 'openrouter' | 'openai' | 'custom';
+
 // 工具类型：从 Conversation 中提取部分字段
 export type ConversationSummary = Pick<Conversation, 'id' | 'title' | 'updatedAt' | 'model'>;
 
@@ -68,6 +70,8 @@ export interface Conversation {
   model: string;
   createdAt: number;
   updatedAt: number;
+  memoryEnabled: boolean;
+  compactionHistory: CompactionSummary[];
 }
 
 export interface StreamChunk {
@@ -99,6 +103,40 @@ export interface StreamingOptions {
   timeout?: number;
   signal?: AbortSignal;
   onChunk?: (chunk: StreamChunk) => void;
+  apiConfig?: APIConfig;
+  systemMessage?: string;
+}
+
+export interface APIConfig {
+  provider: APIProvider;
+  baseUrl: string;
+  apiKey: string;
+  defaultModel: string;
+  temperature: number;
+  maxTokens: number;
+  topP: number;
+}
+
+export interface ProviderPreset {
+  id: APIProvider;
+  name: string;
+  baseUrl: string;
+  models: ModelOption[];
+}
+
+export interface MemoryItem {
+  id: string;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+  enabled: boolean;
+}
+
+export interface CompactionSummary {
+  id: string;
+  originalMessageCount: number;
+  compactedAt: number;
+  summaryContent: string;
 }
 
 export interface PerformanceMetrics {

@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Tooltip } from 'antd';
-import { MenuUnfoldOutlined, PlusOutlined, DownloadOutlined } from '@ant-design/icons';
+import { MenuUnfoldOutlined, PlusOutlined, DownloadOutlined, SettingOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import type { RootState, AppDispatch } from '../../store';
 import { uiActions } from '../../store/uiSlice';
 import { chatActions } from '../../store/chatSlice';
 import { exportAsMarkdown } from '../../utils/exportConversation';
 import { ModelSelector } from './ModelSelector';
+import { TokenCounter } from './TokenCounter';
+import { SettingsDrawer } from './SettingsDrawer';
 
 const Header = styled.div`
   display: flex;
@@ -29,6 +32,7 @@ export function ChatHeader() {
   const conversations = useSelector((s: RootState) => s.chat.conversations);
   const selectedModel = useSelector((s: RootState) => s.ui.selectedModel);
   const activeConv = activeId ? conversations[activeId] : null;
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <Header>
@@ -54,6 +58,7 @@ export function ChatHeader() {
       )}
       <ModelSelector />
       <Spacer />
+      <TokenCounter />
       {activeConv && activeConv.messages.length > 0 && (
         <Tooltip title="导出对话">
           <Button
@@ -64,6 +69,15 @@ export function ChatHeader() {
           />
         </Tooltip>
       )}
+      <Tooltip title="设置">
+        <Button
+          type="text"
+          icon={<SettingOutlined />}
+          onClick={() => setSettingsOpen(true)}
+          size="small"
+        />
+      </Tooltip>
+      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Header>
   );
 }

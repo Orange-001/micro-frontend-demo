@@ -8,6 +8,8 @@ const PREFIX = 'chatgpt-clone';
 const KEYS = {
   conversations: `${PREFIX}-conversations`,
   ui: `${PREFIX}-ui`,
+  config: `${PREFIX}-config`,
+  memory: `${PREFIX}-memory`,
 } as const;
 
 export const storageService = {
@@ -39,6 +41,40 @@ export const storageService = {
   loadUI<T>(): T | null {
     try {
       const raw = localStorage.getItem(KEYS.ui);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  saveConfig(data: unknown): void {
+    try {
+      localStorage.setItem(KEYS.config, JSON.stringify(data));
+    } catch {
+      console.warn('Failed to save config to localStorage');
+    }
+  },
+
+  loadConfig<T>(): T | null {
+    try {
+      const raw = localStorage.getItem(KEYS.config);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  saveMemory(data: unknown): void {
+    try {
+      localStorage.setItem(KEYS.memory, JSON.stringify(data));
+    } catch {
+      console.warn('Failed to save memory to localStorage');
+    }
+  },
+
+  loadMemory<T>(): T | null {
+    try {
+      const raw = localStorage.getItem(KEYS.memory);
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;

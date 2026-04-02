@@ -43,6 +43,8 @@ const chatSlice = createSlice({
         model: action.payload.model,
         createdAt: now,
         updatedAt: now,
+        memoryEnabled: true,
+        compactionHistory: [],
       };
       state.conversations[id] = conv;
       state.conversationOrder.unshift(id);
@@ -152,6 +154,44 @@ const chatSlice = createSlice({
       if (msg) {
         msg.reaction = msg.reaction === action.payload.reaction ? null : action.payload.reaction;
       }
+    },
+
+    toggleConversationMemory(state, action: PayloadAction<string>) {
+      const conv = state.conversations[action.payload];
+      if (conv) conv.memoryEnabled = !conv.memoryEnabled;
+    },
+
+    compactMessages(
+      state,
+      action: PayloadAction<{
+        conversationId: string;
+        summaryContent: string;
+        replacedCount: number;
+      }>,
+    ) {
+      const { conversationId, summaryContent, replacedCount } = action.payload;
+      const conv = state.conversations[conversationId];
+      if (!conv) return;
+
+      // 用一条 system 摘要消息替换前 replacedCount 条消息
+      const summaryMsg: Message = {
+        id: `msg-${Date.now()}-summary`,
+        role: 'system',
+        content: `[Context Summary]\n${summaryContent}`,
+        createdAt: Date.now(),
+        isStreaming: false,
+        reaction: null,
+        attachments: [],
+      };
+
+      conv.messages = [summaryMsg, ...conv.messages.slice(replacedCount)];
+      conv.compactionHistory = conv.compactionHistory ?? [];
+      conv.compactionHistory.push({
+        id: `compact-${Date.now()}`,
+        originalMessageCount: replacedCount,
+        compactedAt: Date.now(),
+        summaryContent,
+      });
     },
   },
 });

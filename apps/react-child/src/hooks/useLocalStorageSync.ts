@@ -34,4 +34,23 @@ export function useLocalStorageSync(): void {
       sidebarCollapsed: ui.sidebarCollapsed,
     });
   }, [ui.theme, ui.selectedModel, ui.sidebarCollapsed]);
+
+  const config = useSelector((s: RootState) => s.config);
+  const configTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (configTimerRef.current) clearTimeout(configTimerRef.current);
+    configTimerRef.current = setTimeout(() => {
+      storageService.saveConfig(config);
+    }, 500);
+    return () => {
+      if (configTimerRef.current) clearTimeout(configTimerRef.current);
+    };
+  }, [config]);
+
+  const memory = useSelector((s: RootState) => s.memory);
+
+  useEffect(() => {
+    storageService.saveMemory(memory);
+  }, [memory]);
 }
