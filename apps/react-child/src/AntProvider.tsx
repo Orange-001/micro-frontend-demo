@@ -1,6 +1,6 @@
 import { StyleProvider } from '@ant-design/cssinjs';
 import { ConfigProvider, theme as antTheme } from 'antd';
-import type { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from './store';
 
@@ -17,8 +17,7 @@ export function AntProvider({ children, microContainer }: Props) {
       <ConfigProvider
         getPopupContainer={() => microContainer}
         theme={{
-          algorithm:
-            currentTheme === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
+          algorithm: currentTheme === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
           token: {
             colorPrimary: '#10a37f',
             borderRadius: 8,

@@ -50,7 +50,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
     try {
       const url = `${config.baseUrl.replace(/\/$/, '')}/models`;
       const headers: Record<string, string> = {
-        'Authorization': `Bearer ${config.apiKey}`,
+        Authorization: `Bearer ${config.apiKey}`,
       };
       if (config.provider === 'openrouter') {
         headers['HTTP-Referer'] = window.location.origin;

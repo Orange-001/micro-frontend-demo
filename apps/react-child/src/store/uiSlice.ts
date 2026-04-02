@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Theme } from '../types/chat';
 import { storageService } from '../services/storageService';
+import { PROVIDER_PRESETS } from '../constants/providers';
 
 interface UIState {
   sidebarCollapsed: boolean;
@@ -15,7 +16,7 @@ const savedUI = storageService.loadUI<Partial<UIState>>();
 const initialState: UIState = {
   sidebarCollapsed: savedUI?.sidebarCollapsed ?? false,
   theme: savedUI?.theme ?? 'light',
-  selectedModel: savedUI?.selectedModel ?? 'gpt-4o',
+  selectedModel: savedUI?.selectedModel ?? PROVIDER_PRESETS.openrouter.models[0].id,
   searchQuery: '',
   webSearchEnabled: false,
 };

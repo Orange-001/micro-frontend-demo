@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Select } from 'antd';
 import type { RootState } from '../../store';
@@ -14,6 +15,15 @@ export function ModelSelector() {
     value: m.id,
     label: m.name,
   }));
+
+  // 当 provider 切换后，若已选模型不在当前列表中，自动纠正为第一个可用模型
+  useEffect(() => {
+    if (config.provider === 'custom') return;
+    const valid = modelOptions.some((o) => o.value === selected);
+    if (!valid && modelOptions[0]) {
+      dispatch(uiActions.setSelectedModel(modelOptions[0].value));
+    }
+  }, [config.provider]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (config.provider === 'custom') {
     return (
