@@ -1,6 +1,8 @@
 import { StyleProvider } from '@ant-design/cssinjs';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, theme as antTheme } from 'antd';
 import type { ReactNode } from 'react';
+import { useSelector } from 'react-redux';
+import type { RootState } from './store';
 
 type Props = {
   children: ReactNode;
@@ -8,14 +10,18 @@ type Props = {
 };
 
 export function AntProvider({ children, microContainer }: Props) {
+  const currentTheme = useSelector((s: RootState) => s.ui.theme);
+
   return (
     <StyleProvider hashPriority="high">
       <ConfigProvider
         getPopupContainer={() => microContainer}
         theme={{
+          algorithm:
+            currentTheme === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
           token: {
-            // 子应用主色：用于验证 host 与 react-child 主题隔离
-            colorPrimary: '#ff4d4f',
+            colorPrimary: '#10a37f',
+            borderRadius: 8,
           },
         }}
       >
