@@ -4,7 +4,6 @@
  * 闭包在此 Hook 中的体现：
  * 1. abortControllerRef 通过闭包在 sendMessage 和 stopStreaming 间共享
  * 2. dispatch 和 activeId 被闭包捕获，回调函数可以访问最新的 Redux 状态
- * 3. isStreamingRef 用闭包维护流式状态，避免 stale closure 问题
  */
 
 import { useCallback, useRef } from 'react';
@@ -14,6 +13,24 @@ import { chatActions } from '../store/chatSlice';
 import { streamChat, createStreamAbortController } from '../services/streamingService';
 import { buildMemorySystemMessage } from '../utils/memoryBuilder';
 import type { Message, APIConfig } from '../types/chat';
+
+/**
+ * INTERVIEW TOPIC: 二面2 - 流式渲染与浏览器重绘机制
+ *
+ * 为什么 for await + dispatch 不会逐字渲染：
+ * - for await...of 基于 Promise（微任务 microtask）
+ * - 浏览器的 paint 在宏任务（macrotask）之间执行
+ * - 微任务队列会在当前宏任务结束前全部清空
+ * - 所以即使 React 同步更新了 DOM，浏览器也不会在微任务间重绘
+ *
+ * 解决方案：
+ * - 在每次 dispatch 后用 setTimeout(0) 让出主线程
+ * - 这样浏览器有机会在两次 dispatch 之间执行 paint
+ * - 实现真正的逐字打字机效果
+ */
+function frameYield(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 export function useStreamingResponse() {
   const dispatch = useDispatch<AppDispatch>();
@@ -89,6 +106,8 @@ export function useStreamingResponse() {
                 content: chunk.content,
               }),
             );
+            // 让出主线程，让浏览器有机会 paint，实现逐字渲染
+            await frameYield();
           } else if (chunk.type === 'error') {
             dispatch(
               chatActions.appendStreamChunk({

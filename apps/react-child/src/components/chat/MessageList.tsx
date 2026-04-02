@@ -1,13 +1,18 @@
 /**
  * INTERVIEW TOPIC: 二面4 - useDeferredValue 延迟渲染优化
  *
- * 当流式消息快速更新时，useDeferredValue 允许 React 延迟渲染消息列表：
- * - 输入框和 UI 交互保持响应
- * - 消息列表渲染可以被新的更高优先级更新中断
- * - 避免流式更新导致的 UI 卡顿
+ * useDeferredValue 的使用需注意场景：
+ * - 适合搜索过滤等"输入 → 列表"场景（Sidebar 搜索已使用 useTransition）
+ * - 不适合流式输出场景：会导致流式文字累积后一次性显示，失去打字机效果
+ * - 因此消息列表直接使用 messages，保证每个 chunk dispatch 后立即渲染
+ *
+ * React 18 自动批处理 (Automatic Batching)：
+ * - 在 async 函数中的多次 setState/dispatch 会被合并为一次渲染
+ * - 流式场景中每个 chunk 独立 dispatch，React 会在微任务间逐帧渲染
+ * - 如果仍有延迟，可通过 flushSync 强制同步渲染（但通常不需要）
  */
 
-import { useRef, useEffect, useDeferredValue, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store';
 import { MessageBubble } from './MessageBubble';
@@ -19,9 +24,6 @@ export function MessageList() {
   const conversations = useSelector((s: RootState) => s.chat.conversations);
   const isStreaming = useSelector((s: RootState) => s.chat.isStreaming);
   const messages = activeId ? conversations[activeId]?.messages ?? [] : [];
-
-  // INTERVIEW: 二面4 - useDeferredValue 延迟消息列表渲染
-  const deferredMessages = useDeferredValue(messages);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -57,14 +59,14 @@ export function MessageList() {
     if (!userScrolledRef.current) {
       scrollToBottom();
     }
-  }, [deferredMessages, scrollToBottom]);
+  }, [messages, scrollToBottom]);
 
   if (!activeId) return null;
 
   return (
     <Wrapper ref={scrollRef}>
       <MessagesContainer>
-        {deferredMessages.map((msg) => (
+        {messages.map((msg) => (
           <MessageBubble
             key={msg.id}
             message={msg}
