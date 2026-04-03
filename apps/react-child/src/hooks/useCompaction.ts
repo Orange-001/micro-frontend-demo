@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { message as antdMessage } from 'antd';
 import type { RootState, AppDispatch } from '../store';
 import { chatActions } from '../store/chatSlice';
 import {
@@ -35,8 +36,13 @@ export function useCompaction() {
     setIsCompacting(true);
 
     try {
-      const { toCompact, toKeep } = getCompactionCandidates(messages);
-      if (toCompact.length === 0) return;
+      let { toCompact, toKeep } = getCompactionCandidates(messages);
+
+      // 即使没有可压缩候选（消息数 <= keepRecentCount），也允许压缩全部消息
+      if (toCompact.length === 0) {
+        toCompact = [...messages];
+        toKeep = [];
+      }
 
       let summary: string;
 
@@ -64,6 +70,8 @@ export function useCompaction() {
           replacedCount: toCompact.length,
         }),
       );
+
+      antdMessage.success(`已压缩 ${toCompact.length} 条消息`);
     } catch (err) {
       console.error('Compaction failed:', err);
     } finally {

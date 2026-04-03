@@ -61,6 +61,12 @@ export function MessageList() {
     return () => el.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 切换对话时，重置滚动状态并强制滚底
+  useEffect(() => {
+    userScrolledRef.current = false;
+    scrollToBottom();
+  }, [activeId, scrollToBottom]);
+
   // 自动滚动到底部（仅在流式输出且用户未手动滚动时）
   useEffect(() => {
     if (!userScrolledRef.current) {
