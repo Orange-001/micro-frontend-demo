@@ -7,6 +7,7 @@
  */
 
 import { useCallback, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../store';
 import { chatActions } from '../store/chatSlice';
@@ -98,15 +99,42 @@ export function useStreamingResponse() {
           systemMessage: systemMessage ?? undefined,
         });
 
+        let isInReasoning = false;
+
         for await (const chunk of stream) {
-          if (chunk.type === 'text') {
-            dispatch(
-              chatActions.appendStreamChunk({
-                conversationId,
-                content: chunk.content,
-              }),
-            );
-            // 让出主线程，让浏览器有机会 paint，实现逐字渲染
+          if (chunk.type === 'reasoning') {
+            // 推理模型 thinking 阶段：用 blockquote 展示思考过程
+            let prefix = '';
+            if (!isInReasoning) {
+              isInReasoning = true;
+              prefix = '> **💭 思考过程**\n>\n> ';
+            }
+            // 将换行转为 blockquote 续行
+            const quotedContent = chunk.content.replace(/\n/g, '\n> ');
+            flushSync(() => {
+              dispatch(
+                chatActions.appendStreamChunk({
+                  conversationId,
+                  content: prefix + quotedContent,
+                }),
+              );
+            });
+            await frameYield();
+          } else if (chunk.type === 'text') {
+            // 从 reasoning 切换到正文时，插入分隔
+            let prefix = '';
+            if (isInReasoning) {
+              isInReasoning = false;
+              prefix = '\n\n---\n\n';
+            }
+            flushSync(() => {
+              dispatch(
+                chatActions.appendStreamChunk({
+                  conversationId,
+                  content: prefix + chunk.content,
+                }),
+              );
+            });
             await frameYield();
           } else if (chunk.type === 'error') {
             dispatch(
@@ -117,6 +145,16 @@ export function useStreamingResponse() {
             );
             break;
           }
+        }
+
+        // 流结束时如果仍在 reasoning 阶段，插入分隔线
+        if (isInReasoning) {
+          dispatch(
+            chatActions.appendStreamChunk({
+              conversationId,
+              content: '\n\n---\n\n',
+            }),
+          );
         }
       } catch (error: any) {
         if (error.name !== 'AbortError') {

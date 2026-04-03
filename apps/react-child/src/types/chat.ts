@@ -75,7 +75,7 @@ export interface Conversation {
 }
 
 export interface StreamChunk {
-  type: 'text' | 'error' | 'done';
+  type: 'text' | 'reasoning' | 'error' | 'done';
   content: string;
 }
 

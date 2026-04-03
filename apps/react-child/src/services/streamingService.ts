@@ -234,11 +234,21 @@ function parseSSEEvent(event: string): StreamChunk | null {
   if (data.startsWith('{')) {
     try {
       const json = JSON.parse(data);
-      const content = json.choices?.[0]?.delta?.content;
-      if (content !== undefined && content !== null) {
-        return { type: 'text', content };
+      const delta = json.choices?.[0]?.delta;
+      if (!delta) return null;
+
+      // 推理/思考内容优先检查（Qwen/DeepSeek/Gemini 等模型）
+      // Qwen 在 thinking 阶段会同时返回 content:"" 和 reasoning:"..."
+      // 必须先检查 reasoning，否则空 content 会短路掉 reasoning 分支
+      const reasoning = delta.reasoning_content ?? delta.reasoning;
+      if (reasoning) {
+        return { type: 'reasoning', content: reasoning };
       }
-      // delta 中没有 content (如只有 role)，跳过
+      // 正文内容（排除空字符串）
+      if (delta.content) {
+        return { type: 'text', content: delta.content };
+      }
+      // delta 中没有有效内容 (如只有 role，或 content:"")，跳过
       return null;
     } catch {
       // JSON 解析失败，当纯文本处理

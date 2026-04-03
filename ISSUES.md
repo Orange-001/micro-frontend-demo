@@ -114,3 +114,27 @@ function unmount() {
   fontStyleEl = null;
 }
 ```
+
+---
+
+## 7. 推理模型（Qwen/DeepSeek/Gemini）流式输出时 thinking 阶段无内容显示
+
+**现象**：使用 `qwen/qwen3-plus` 等带推理能力的模型时，发送消息后前面很长一段时间页面无任何文字输出，等到 thinking 结束开始输出正文后才突然显示内容。
+
+**原因**：这类模型在 thinking 阶段，SSE delta 返回的是 `reasoning_content` 或 `reasoning` 字段而非 `content` 字段。且 Qwen 会同时返回 `content: ""` （空字符串）和 `reasoning: "实际内容"`。
+
+原来的 `parseSSEEvent` 只检查 `delta.content !== undefined && delta.content !== null`，空字符串 `""` 通过了此检查，直接返回空文本 chunk，`reasoning` 分支永远不会执行。thinking 阶段的所有内容被静默丢弃。
+
+```json
+// Qwen SSE delta 示例
+"delta": {
+  "content": "",
+  "role": "assistant",
+  "reasoning": " management)\n  "
+}
+```
+
+**修复**：
+1. `streamingService.ts` — `parseSSEEvent` 中将 `reasoning` 检查移到 `content` 之前，并改用 truthiness 检查（`if (reasoning)` / `if (delta.content)`），空字符串自动被过滤
+2. `types/chat.ts` — `StreamChunk.type` 增加 `'reasoning'` 类型
+3. `useStreamingResponse.ts` — 新增 `reasoning` chunk 处理逻辑，将思考内容用 Markdown blockquote 展示，thinking 结束后插入分隔线再输出正文
