@@ -13,21 +13,23 @@ import { CodeBlockWrapper, CodeHeader, CopyBtn, Pre } from './CodeBlock.styles';
 
 interface Props {
   language: string;
-  children: string;
+  children: React.ReactNode;
+  /** Plain text for clipboard copy */
+  copyText: string;
 }
 
-export function CodeBlock({ language, children }: Props) {
+export function CodeBlock({ language, children, copyText }: Props) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(children);
+      await navigator.clipboard.writeText(copyText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // fallback
       const textarea = document.createElement('textarea');
-      textarea.value = children;
+      textarea.value = copyText;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
@@ -35,7 +37,7 @@ export function CodeBlock({ language, children }: Props) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [children]);
+  }, [copyText]);
 
   return (
     <CodeBlockWrapper>
@@ -54,7 +56,7 @@ export function CodeBlock({ language, children }: Props) {
         </CopyBtn>
       </CodeHeader>
       <Pre>
-        <code className={language ? `hljs language-${language}` : ''}>{children}</code>
+        <code className={`hljs${language ? ` language-${language}` : ''}`}>{children}</code>
       </Pre>
     </CodeBlockWrapper>
   );

@@ -87,8 +87,8 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: Prop
                     return <MermaidBlock chart={codeString} />;
                   }
 
-                  // 代码块
-                  return <CodeBlock language={match[1]} children={codeString} />;
+                  // 代码块 — 保留 rehype-highlight 生成的高亮 span 节点
+                  return <CodeBlock language={match[1]} copyText={codeString}>{children}</CodeBlock>;
                 },
               }}
             >

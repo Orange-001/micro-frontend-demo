@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Theme, CodeTheme } from '../types/chat';
 import { storageService } from '../services/storageService';
 import { PROVIDER_PRESETS } from '../constants/providers';
+import { getDefaultCodeTheme } from '../constants/codeThemes';
 
 interface UIState {
   sidebarCollapsed: boolean;
@@ -40,9 +41,12 @@ const uiSlice = createSlice({
     },
     setTheme(state, action: PayloadAction<Theme>) {
       state.theme = action.payload;
+      state.codeTheme = getDefaultCodeTheme(action.payload);
     },
     toggleTheme(state) {
-      state.theme = state.theme === 'light' ? 'dark' : 'light';
+      const next = state.theme === 'light' ? 'dark' : 'light';
+      state.theme = next;
+      state.codeTheme = getDefaultCodeTheme(next);
     },
     setCodeTheme(state, action: PayloadAction<CodeTheme>) {
       state.codeTheme = action.payload;
