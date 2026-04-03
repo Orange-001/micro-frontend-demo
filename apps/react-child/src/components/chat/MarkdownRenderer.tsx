@@ -32,6 +32,21 @@ interface Props {
   content: string;
 }
 
+/**
+ * 从 React children 中递归提取纯文本
+ * rehype-highlight 会将代码转为 <span> 元素树，String() 只会得到 [object Object]
+ */
+function extractText(node: React.ReactNode): string {
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (!node) return '';
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (typeof node === 'object' && 'props' in node) {
+    return extractText((node as React.ReactElement).props.children);
+  }
+  return '';
+}
+
 export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: Props) {
   // 检查是否包含 Agent 步骤标记
   const { markdownParts, agentSteps } = useMemo(() => parseContent(content), [content]);
@@ -47,7 +62,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: Prop
               components={{
                 code({ className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '');
-                  const codeString = String(children).replace(/\n$/, '');
+                  const codeString = extractText(children).replace(/\n$/, '');
 
                   // 行内代码
                   if (!match) {
