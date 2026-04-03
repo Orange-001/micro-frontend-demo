@@ -138,3 +138,33 @@ function unmount() {
 1. `streamingService.ts` — `parseSSEEvent` 中将 `reasoning` 检查移到 `content` 之前，并改用 truthiness 检查（`if (reasoning)` / `if (delta.content)`），空字符串自动被过滤
 2. `types/chat.ts` — `StreamChunk.type` 增加 `'reasoning'` 类型
 3. `useStreamingResponse.ts` — 新增 `reasoning` chunk 处理逻辑，将思考内容用 Markdown blockquote 展示，thinking 结束后插入分隔线再输出正文
+
+---
+
+## 8. Markdown 代码块中 rehype-highlight 导致 [object Object] 输出
+
+**现象**：代码块内容显示为 `[object Object]` 而非正常代码文本。
+
+**原因**：`rehype-highlight` 将代码转换为 `<span>` 元素树（React 元素），`CodeBlock` 组件直接对 `children` 调用 `String()` 得到 `[object Object]`。
+
+**修复**：在 `MarkdownRenderer.tsx` 中新增 `extractText()` 递归函数，从 React 元素树中提取纯文本后再传给 `CodeBlock`。
+
+---
+
+## 9. Mermaid 图表中文/混合文本被截断
+
+**现象**：Mermaid 流程图节点标签文字不完整，如 `输入年份 year` 只显示 `输入年份 ye`，`year % 4 == 0?` 只显示 `year % 4 ==`。
+
+**原因**：`mermaid.initialize()` 使用了 `securityLevel: 'strict'`，该模式会强制 `htmlLabels = false`，使 Mermaid 用 SVG `<text>` 元素渲染标签。SVG 文本测量对中文和中英混排文本宽度计算不准确，导致节点框比实际文字窄，文本被裁切。
+
+**修复**：将 `securityLevel` 改为 `'loose'`，使 `htmlLabels: true`（默认值）生效。Mermaid 改用 `<foreignObject>` + HTML 布局，由浏览器原生排版引擎计算文字宽度，中文和混合文本测量准确。
+
+---
+
+## 10. scroll-behavior: smooth 导致异步内容渲染后无法自动滚底
+
+**现象**：页面刷新后，包含 Mermaid 图表的对话没有滚动到底部。
+
+**原因**：`MessageList` 的滚动容器设置了 `scroll-behavior: smooth`。当 `scrollToBottom()` 设置 `el.scrollTop = el.scrollHeight` 后，平滑滚动动画期间会持续触发 scroll 事件。scroll 事件处理函数检测到 `scrollHeight - scrollTop - clientHeight > 50`（动画还没滚到底），将 `userScrolledRef` 设为 `true`。随后 Mermaid 异步渲染完成，`ResizeObserver` 触发 `scrollToBottom()`，但因 `userScrolledRef === true` 而跳过滚动。
+
+**修复**：新增 `isProgrammaticScroll` ref 标记程序触发的滚动。`scrollToBottom()` 调用时设为 `true`，500ms 后（smooth 动画结束）恢复 `false`。scroll 事件处理函数在 `isProgrammaticScroll === true` 时直接 return，不更新 `userScrolledRef`。同时用 `ResizeObserver` 监听内容区高度变化，替代自定义事件，确保任何异步内容（Mermaid、图片等）渲染后都能触发滚底。

@@ -29,12 +29,17 @@ export function MessageList() {
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const userScrolledRef = useRef(false);
 
+  const isProgrammaticScroll = useRef(false);
+
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
     if (el) {
+      isProgrammaticScroll.current = true;
       el.scrollTop = el.scrollHeight;
       userScrolledRef.current = false;
       setShowScrollBtn(false);
+      // smooth 动画结束后才解除标记
+      setTimeout(() => { isProgrammaticScroll.current = false; }, 500);
     }
   }, []);
 
@@ -44,6 +49,8 @@ export function MessageList() {
     if (!el) return;
 
     const handleScroll = () => {
+      // 程序触发的滚动不算用户手动滚动
+      if (isProgrammaticScroll.current) return;
       const { scrollTop, scrollHeight, clientHeight } = el;
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
       userScrolledRef.current = !isAtBottom;
@@ -59,6 +66,18 @@ export function MessageList() {
     if (!userScrolledRef.current) {
       scrollToBottom();
     }
+  }, [messages, scrollToBottom]);
+
+  // 监听内容区高度变化（Mermaid 异步渲染、图片加载等），自动滚底
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      if (!userScrolledRef.current) scrollToBottom();
+    });
+    // 观察内部内容容器，尺寸变化时触发
+    Array.from(el.children).forEach((child) => ro.observe(child));
+    return () => ro.disconnect();
   }, [messages, scrollToBottom]);
 
   if (!activeId) return null;
