@@ -5,6 +5,7 @@ import {
   PauseCircleOutlined,
   PaperClipOutlined,
   GlobalOutlined,
+  BulbOutlined,
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../store';
@@ -28,6 +29,7 @@ export function InputArea() {
   const { sendMessage, stopStreaming, isStreaming } = useStreamingResponse();
   const { textareaRef, resize } = useAutoResizeTextarea(6);
   const webSearchEnabled = useSelector((s: RootState) => s.ui.webSearchEnabled);
+  const deepThinkingEnabled = useSelector((s: RootState) => s.ui.deepThinkingEnabled);
   const activeId = useSelector((s: RootState) => s.chat.activeConversationId);
   const selectedModel = useSelector((s: RootState) => s.ui.selectedModel);
 
@@ -94,6 +96,17 @@ export function InputArea() {
                   onClick={() => dispatch(uiActions.toggleWebSearch())}
                   style={{
                     color: webSearchEnabled ? 'var(--accent-color)' : 'var(--text-tertiary)',
+                  }}
+                />
+              </Tooltip>
+              <Tooltip title={deepThinkingEnabled ? '关闭深度思考' : '开启深度思考'}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<BulbOutlined />}
+                  onClick={() => dispatch(uiActions.toggleDeepThinking())}
+                  style={{
+                    color: deepThinkingEnabled ? 'var(--accent-color)' : 'var(--text-tertiary)',
                   }}
                 />
               </Tooltip>

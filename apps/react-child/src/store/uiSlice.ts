@@ -9,6 +9,7 @@ interface UIState {
   selectedModel: string;
   searchQuery: string;
   webSearchEnabled: boolean;
+  deepThinkingEnabled: boolean;
 }
 
 const savedUI = storageService.loadUI<Partial<UIState>>();
@@ -19,6 +20,7 @@ const initialState: UIState = {
   selectedModel: savedUI?.selectedModel ?? PROVIDER_PRESETS.openrouter.models[0].id,
   searchQuery: '',
   webSearchEnabled: false,
+  deepThinkingEnabled: false,
 };
 
 const uiSlice = createSlice({
@@ -48,6 +50,9 @@ const uiSlice = createSlice({
     },
     toggleWebSearch(state) {
       state.webSearchEnabled = !state.webSearchEnabled;
+    },
+    toggleDeepThinking(state) {
+      state.deepThinkingEnabled = !state.deepThinkingEnabled;
     },
   },
 });

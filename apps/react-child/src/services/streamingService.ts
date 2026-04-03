@@ -86,14 +86,20 @@ async function* streamFromRealAPI(
     headers['X-Title'] = 'ChatGPT Clone';
   }
 
-  const body = JSON.stringify({
+  const bodyObj: Record<string, unknown> = {
     model: options.model || apiConfig.defaultModel,
     messages: apiMessages,
     temperature: apiConfig.temperature,
     max_tokens: apiConfig.maxTokens,
     top_p: apiConfig.topP,
     stream: true,
-  });
+  };
+
+  // 深度思考：显式控制模型推理行为
+  // Qwen3 等模型默认开启 thinking，必须显式传 "off" 才能关闭
+  bodyObj.reasoning_effort = options.deepThinking ? 'high' : 'none';
+
+  const body = JSON.stringify(bodyObj);
 
   const response = await fetch(url, {
     method: 'POST',

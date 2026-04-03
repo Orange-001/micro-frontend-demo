@@ -105,6 +105,7 @@ export interface StreamingOptions {
   onChunk?: (chunk: StreamChunk) => void;
   apiConfig?: APIConfig;
   systemMessage?: string;
+  deepThinking?: boolean;
 }
 
 export interface APIConfig {

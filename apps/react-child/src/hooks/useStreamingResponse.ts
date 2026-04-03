@@ -41,6 +41,7 @@ export function useStreamingResponse() {
   const isStreaming = useSelector((s: RootState) => s.chat.isStreaming);
   const config = useSelector((s: RootState) => s.config);
   const memory = useSelector((s: RootState) => s.memory);
+  const deepThinkingEnabled = useSelector((s: RootState) => s.ui.deepThinkingEnabled);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -97,6 +98,7 @@ export function useStreamingResponse() {
           signal: controller.signal,
           apiConfig,
           systemMessage: systemMessage ?? undefined,
+          deepThinking: deepThinkingEnabled,
         });
 
         let isInReasoning = false;
@@ -170,7 +172,7 @@ export function useStreamingResponse() {
         abortControllerRef.current = null;
       }
     },
-    [activeId, conversations, dispatch, selectedModel, config, memory],
+    [activeId, conversations, dispatch, selectedModel, config, memory, deepThinkingEnabled],
   );
 
   const stopStreaming = useCallback(() => {
