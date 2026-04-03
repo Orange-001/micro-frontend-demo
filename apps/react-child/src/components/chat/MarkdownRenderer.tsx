@@ -22,6 +22,7 @@ import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { CodeBlock } from './CodeBlock';
+import { MermaidBlock } from './MermaidBlock';
 import { AgentTaskPanel } from './AgentTaskPanel';
 
 // rehype/remark 插件数组保持引用稳定
@@ -79,6 +80,11 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: Prop
                         {children}
                       </code>
                     );
+                  }
+
+                  // Mermaid 图表
+                  if (match[1] === 'mermaid') {
+                    return <MermaidBlock chart={codeString} />;
                   }
 
                   // 代码块
