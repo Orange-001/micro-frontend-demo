@@ -18,6 +18,14 @@ export type MessageRole = 'user' | 'assistant' | 'system';
 
 export type Theme = 'light' | 'dark';
 
+export type CodeTheme =
+  | 'github-dark'
+  | 'github-light'
+  | 'vs2015'
+  | 'atom-one-dark'
+  | 'monokai-sublime'
+  | 'tokyo-night-dark';
+
 export type DateGroup =
   | 'Today'
   | 'Yesterday'

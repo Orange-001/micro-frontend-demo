@@ -1,11 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { Theme } from '../types/chat';
+import type { Theme, CodeTheme } from '../types/chat';
 import { storageService } from '../services/storageService';
 import { PROVIDER_PRESETS } from '../constants/providers';
 
 interface UIState {
   sidebarCollapsed: boolean;
   theme: Theme;
+  codeTheme: CodeTheme;
   selectedModel: string;
   searchQuery: string;
   webSearchEnabled: boolean;
@@ -17,6 +18,7 @@ const savedUI = storageService.loadUI<Partial<UIState>>();
 const initialState: UIState = {
   sidebarCollapsed: savedUI?.sidebarCollapsed ?? false,
   theme: savedUI?.theme ?? 'light',
+  codeTheme: savedUI?.codeTheme ?? 'github-dark',
   selectedModel: savedUI?.selectedModel ?? PROVIDER_PRESETS.openrouter.models[0].id,
   searchQuery: '',
   webSearchEnabled: false,
@@ -41,6 +43,9 @@ const uiSlice = createSlice({
     },
     toggleTheme(state) {
       state.theme = state.theme === 'light' ? 'dark' : 'light';
+    },
+    setCodeTheme(state, action: PayloadAction<CodeTheme>) {
+      state.codeTheme = action.payload;
     },
     setSelectedModel(state, action: PayloadAction<string>) {
       state.selectedModel = action.payload;

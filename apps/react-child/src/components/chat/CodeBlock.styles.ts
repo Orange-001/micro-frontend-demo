@@ -5,7 +5,6 @@ export const CodeBlockWrapper = styled.div`
   margin: 12px 0;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--code-bg);
   border: 1px solid var(--border-color);
 `;
 
@@ -41,12 +40,13 @@ export const CopyBtn = styled.button`
 
 export const Pre = styled.pre`
   margin: 0;
-  padding: 16px;
   overflow-x: auto;
-  font-size: 14px;
-  line-height: 1.6;
 
   code {
+    display: block;
+    padding: 16px;
     font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
   }
 `;

@@ -30,10 +30,11 @@ export function useLocalStorageSync(): void {
   useEffect(() => {
     storageService.saveUI({
       theme: ui.theme,
+      codeTheme: ui.codeTheme,
       selectedModel: ui.selectedModel,
       sidebarCollapsed: ui.sidebarCollapsed,
     });
-  }, [ui.theme, ui.selectedModel, ui.sidebarCollapsed]);
+  }, [ui.theme, ui.codeTheme, ui.selectedModel, ui.sidebarCollapsed]);
 
   const config = useSelector((s: RootState) => s.config);
   const configTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

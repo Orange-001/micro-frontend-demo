@@ -11,6 +11,7 @@ import type { RootState } from '../../store';
 import { useLocalStorageSync } from '../../hooks/useLocalStorageSync';
 import { Sidebar } from './Sidebar';
 import { MainArea } from './MainArea';
+import { CodeThemeStyle } from './CodeThemeStyle';
 import { Wrapper } from './ChatLayout.styles';
 
 export function ChatLayout() {
@@ -22,6 +23,7 @@ export function ChatLayout() {
 
   return (
     <Wrapper $collapsed={sidebarCollapsed} $theme={theme}>
+      <CodeThemeStyle />
       <Sidebar />
       <MainArea />
     </Wrapper>

@@ -17,7 +17,8 @@ import type { RootState } from '../../store';
 import { configActions } from '../../store/configSlice';
 import { uiActions } from '../../store/uiSlice';
 import { PROVIDER_PRESETS } from '../../constants/providers';
-import type { APIProvider } from '../../types/chat';
+import type { APIProvider, CodeTheme } from '../../types/chat';
+import { CODE_THEMES } from '../../constants/codeThemes';
 
 interface Props {
   open: boolean;
@@ -27,6 +28,7 @@ interface Props {
 export function SettingsDrawer({ open, onClose }: Props) {
   const dispatch = useDispatch();
   const config = useSelector((s: RootState) => s.config);
+  const codeTheme = useSelector((s: RootState) => s.ui.codeTheme);
 
   const currentPreset = PROVIDER_PRESETS[config.provider];
   const modelOptions =
@@ -140,6 +142,18 @@ export function SettingsDrawer({ open, onClose }: Props) {
               style={{ width: '100%' }}
             />
           )}
+        </Form.Item>
+
+        <Form.Item label="代码主题">
+          <Select
+            value={codeTheme}
+            onChange={(val: CodeTheme) => dispatch(uiActions.setCodeTheme(val))}
+            options={CODE_THEMES.map((t) => ({
+              value: t.id,
+              label: `${t.name}${t.style === 'light' ? ' ☀️' : ' 🌙'}`,
+            }))}
+            style={{ width: '100%' }}
+          />
         </Form.Item>
 
         <Collapse
