@@ -60,6 +60,15 @@ export interface Attachment {
   url: string;
 }
 
+export interface PendingFileAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  preview: string;
+  content: string;
+}
+
 export interface Message {
   id: string;
   role: MessageRole;
@@ -114,6 +123,7 @@ export interface StreamingOptions {
   apiConfig?: APIConfig;
   systemMessage?: string;
   deepThinking?: boolean;
+  attachments?: PendingFileAttachment[];
 }
 
 export interface APIConfig {

@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Button, Tooltip, Upload } from 'antd';
+import { Button, Tooltip, Upload, message } from 'antd';
 import {
   SendOutlined,
   PauseCircleOutlined,
   PaperClipOutlined,
   GlobalOutlined,
   BulbOutlined,
+  CloseOutlined,
+  FileOutlined,
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../store';
@@ -13,6 +15,8 @@ import { chatActions } from '../../store/chatSlice';
 import { uiActions } from '../../store/uiSlice';
 import { useStreamingResponse } from '../../hooks/useStreamingResponse';
 import { useAutoResizeTextarea } from '../../hooks/useAutoResizeTextarea';
+import { processFile } from '../../services/fileUtils';
+import type { PendingFileAttachment } from '../../types/chat';
 import {
   InputWrapper,
   InputContainer,
@@ -21,11 +25,16 @@ import {
   LeftActions,
   RightActions,
   Disclaimer,
+  FilePreviewList,
+  PreviewCard,
+  PreviewRemoveBtn,
 } from './InputArea.styles';
 
 export function InputArea() {
   const dispatch = useDispatch<AppDispatch>();
   const [input, setInput] = useState('');
+  const [pendingFiles, setPendingFiles] = useState<PendingFileAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
   const { sendMessage, stopStreaming, isStreaming } = useStreamingResponse();
   const { textareaRef, resize } = useAutoResizeTextarea(6);
   const webSearchEnabled = useSelector((s: RootState) => s.ui.webSearchEnabled);
@@ -35,19 +44,21 @@ export function InputArea() {
 
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
-    if (!trimmed || isStreaming) return;
+    if ((!trimmed && pendingFiles.length === 0) || isStreaming) return;
 
     // 如果没有活跃对话，先创建
     if (!activeId) {
       dispatch(chatActions.createConversation({ model: selectedModel }));
     }
 
+    const filesToSend = [...pendingFiles];
     setInput('');
+    setPendingFiles([]);
     // 延迟发送，确保新对话已创建
     setTimeout(() => {
-      sendMessage(trimmed);
+      sendMessage(trimmed, filesToSend);
     }, 0);
-  }, [input, isStreaming, activeId, dispatch, selectedModel, sendMessage]);
+  }, [input, pendingFiles, isStreaming, activeId, dispatch, selectedModel, sendMessage]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -64,6 +75,23 @@ export function InputArea() {
     resize();
   }, [input, resize]);
 
+  const handleBeforeUpload = useCallback(async (file: File) => {
+    setUploading(true);
+    try {
+      const processed = await processFile(file);
+      setPendingFiles((prev) => [...prev, processed]);
+    } catch (err: any) {
+      message.error(err.message);
+    } finally {
+      setUploading(false);
+    }
+    return false;
+  }, []);
+
+  const handleRemoveFile = useCallback((id: string) => {
+    setPendingFiles((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
   return (
     <>
       <InputWrapper>
@@ -76,15 +104,50 @@ export function InputArea() {
             placeholder="发送消息..."
             rows={1}
           />
+          {pendingFiles.length > 0 && (
+            <FilePreviewList>
+              {pendingFiles.map((f) => (
+                <PreviewCard key={f.id}>
+                  {f.preview ? (
+                    <img src={f.preview} alt={f.name} />
+                  ) : (
+                    <div className="file-icon">
+                      <FileOutlined />
+                    </div>
+                  )}
+                  <span className="file-name" title={f.name}>
+                    {f.name}
+                  </span>
+                  <PreviewRemoveBtn
+                    icon={<CloseOutlined />}
+                    size="small"
+                    type="text"
+                    onClick={() => handleRemoveFile(f.id)}
+                  />
+                </PreviewCard>
+              ))}
+            </FilePreviewList>
+          )}
           <BottomRow>
             <LeftActions>
               <Tooltip title="上传文件">
-                <Upload beforeUpload={() => false} showUploadList={false}>
+                <Upload
+                  multiple
+                  beforeUpload={handleBeforeUpload}
+                  showUploadList={false}
+                  accept="image/jpeg,image/png,image/webp,image/gif,.txt,.md,.pdf,.doc,.docx,.csv,.json,.xml,.html,.css,.js,.ts,.tsx,.py,.java,.go,.rs,.c,.cpp,.h,.sh,.yaml,.yml,.toml,.ini,.log,.sql"
+                  disabled={uploading}
+                >
                   <Button
                     type="text"
                     size="small"
                     icon={<PaperClipOutlined />}
-                    style={{ color: 'var(--text-tertiary)' }}
+                    style={{
+                      color:
+                        pendingFiles.length > 0
+                          ? 'var(--accent-color)'
+                          : 'var(--text-tertiary)',
+                    }}
                   />
                 </Upload>
               </Tooltip>
@@ -127,10 +190,16 @@ export function InputArea() {
                   size="small"
                   icon={<SendOutlined />}
                   onClick={handleSend}
-                  disabled={!input.trim()}
+                  disabled={!input.trim() && pendingFiles.length === 0}
                   style={{
-                    background: input.trim() ? 'var(--accent-color)' : undefined,
-                    borderColor: input.trim() ? 'var(--accent-color)' : undefined,
+                    background:
+                      input.trim() || pendingFiles.length > 0
+                        ? 'var(--accent-color)'
+                        : undefined,
+                    borderColor:
+                      input.trim() || pendingFiles.length > 0
+                        ? 'var(--accent-color)'
+                        : undefined,
                   }}
                 />
               )}

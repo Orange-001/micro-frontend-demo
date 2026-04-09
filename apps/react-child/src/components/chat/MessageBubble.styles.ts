@@ -106,3 +106,42 @@ export const ActionsRow = styled.div`
     opacity: 1;
   }
 `;
+
+export const AttachmentGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+`;
+
+export const AttachmentImage = styled.img`
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 12px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.85;
+  }
+`;
+
+export const AttachmentFile = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  color: var(--text-primary);
+  max-width: 200px;
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+`;

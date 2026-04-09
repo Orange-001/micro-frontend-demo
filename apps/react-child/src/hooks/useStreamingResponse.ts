@@ -13,7 +13,7 @@ import type { RootState, AppDispatch } from '../store';
 import { chatActions } from '../store/chatSlice';
 import { streamChat, createStreamAbortController } from '../services/streamingService';
 import { buildMemorySystemMessage } from '../utils/memoryBuilder';
-import type { Message, APIConfig } from '../types/chat';
+import type { Message, APIConfig, PendingFileAttachment } from '../types/chat';
 
 /**
  * INTERVIEW TOPIC: 二面2 - 流式渲染与浏览器重绘机制
@@ -46,7 +46,7 @@ export function useStreamingResponse() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, attachments?: PendingFileAttachment[]) => {
       let conversationId = activeId;
 
       if (!conversationId) {
@@ -56,14 +56,27 @@ export function useStreamingResponse() {
 
       const conv = conversations[conversationId];
 
+      // 将文本文件内容内联到消息文本中
+      let fullContent = content;
+      const textFiles = attachments?.filter((f) => !f.preview) ?? [];
+      for (const tf of textFiles) {
+        fullContent += `\n\n--- File: ${tf.name} ---\n${tf.content}`;
+      }
+
       const userMessage: Message = {
         id: `msg-${Date.now()}-user`,
         role: 'user',
-        content,
+        content: fullContent,
         createdAt: Date.now(),
         isStreaming: false,
         reaction: null,
-        attachments: [],
+        attachments: (attachments ?? []).map((f) => ({
+          id: f.id,
+          name: f.name,
+          type: f.type,
+          size: f.size,
+          url: f.preview || '',
+        })),
       };
 
       dispatch(chatActions.addMessage({ conversationId, message: userMessage }));
@@ -93,12 +106,16 @@ export function useStreamingResponse() {
           ? config
           : undefined;
 
+        // 仅传递图片附件（有 preview 的为图片）
+        const imageAttachments = attachments?.filter((f) => f.preview) ?? [];
+
         const stream = streamChat(messages, {
           model: selectedModel,
           signal: controller.signal,
           apiConfig,
           systemMessage: systemMessage ?? undefined,
           deepThinking: deepThinkingEnabled,
+          attachments: imageAttachments,
         });
 
         let isInReasoning = false;

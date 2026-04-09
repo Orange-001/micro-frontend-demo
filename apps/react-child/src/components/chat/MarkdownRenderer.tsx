@@ -20,6 +20,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
 import { CodeBlock } from './CodeBlock';
 import { MermaidBlock } from './MermaidBlock';
@@ -27,7 +28,7 @@ import { AgentTaskPanel } from './AgentTaskPanel';
 
 // rehype/remark 插件数组保持引用稳定
 const remarkPlugins = [remarkGfm, remarkMath];
-const rehypePlugins = [rehypeHighlight, rehypeKatex];
+const rehypePlugins = [rehypeRaw, rehypeHighlight, rehypeKatex];
 
 interface Props {
   content: string;
@@ -89,6 +90,23 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: Prop
 
                   // 代码块 — 保留 rehype-highlight 生成的高亮 span 节点
                   return <CodeBlock language={match[1]} copyText={codeString}>{children}</CodeBlock>;
+                },
+                img({ src, alt, ...props }) {
+                  return (
+                    <img
+                      src={src}
+                      alt={alt || ''}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '400px',
+                        borderRadius: '12px',
+                        margin: '12px 0',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => src && window.open(src, '_blank')}
+                      {...props}
+                    />
+                  );
                 },
               }}
             >

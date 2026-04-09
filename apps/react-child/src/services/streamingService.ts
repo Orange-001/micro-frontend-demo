@@ -22,7 +22,7 @@
  * - 需要处理"粘包"（一次 read 包含多个事件）和"分包"（一个事件跨多次 read）
  */
 
-import type { StreamChunk, StreamingOptions, Message, APIConfig } from '../types/chat';
+import type { StreamChunk, StreamingOptions, Message, APIConfig, PendingFileAttachment } from '../types/chat';
 import { getMatchedResponse } from './mockResponses';
 
 /**
@@ -62,7 +62,17 @@ async function* streamFromRealAPI(
   const url = `${apiConfig.baseUrl.replace(/\/$/, '')}/chat/completions`;
 
   // 构建消息数组
-  const apiMessages: { role: string; content: string }[] = [];
+  const apiMessages: {
+    role: string;
+    content:
+      | string
+      | Array<{
+          type: string;
+          text?: string;
+          image_url?: { url: string };
+        }>;
+  }[] = [];
+  const fileAttachments = options.attachments as PendingFileAttachment[] | undefined;
 
   // 注入 system message (Memory)
   if (systemMessage) {
@@ -70,8 +80,32 @@ async function* streamFromRealAPI(
   }
 
   // 转换消息格式
+  const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
   for (const msg of messages) {
-    apiMessages.push({ role: msg.role, content: msg.content });
+    const isLastUserMsg = msg === lastUserMsg && fileAttachments && fileAttachments.length > 0;
+
+    if (isLastUserMsg) {
+      const contentParts: Array<{
+        type: string;
+        text?: string;
+        image_url?: { url: string };
+      }> = [];
+
+      if (msg.content.trim()) {
+        contentParts.push({ type: 'text', text: msg.content });
+      }
+
+      for (const attachment of fileAttachments) {
+        contentParts.push({
+          type: 'image_url',
+          image_url: { url: attachment.preview },
+        });
+      }
+
+      apiMessages.push({ role: msg.role, content: contentParts });
+    } else {
+      apiMessages.push({ role: msg.role, content: msg.content });
+    }
   }
 
   // 构建请求头
