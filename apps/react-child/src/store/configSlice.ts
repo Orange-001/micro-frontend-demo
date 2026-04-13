@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { APIConfig, APIProvider } from '../types/chat';
 import { PROVIDER_PRESETS } from '../constants/providers';
+import { DEFAULT_SHORTCUTS, type ShortcutsConfig, type ShortcutActionId } from '../utils/shortcuts';
 
 interface ModelOption {
   id: string;
@@ -12,6 +13,7 @@ interface ConfigState extends Omit<APIConfig, 'searchBaseUrl'> {
   searchBaseUrl: string;
   fetchedModels: ModelOption[];
   isLoadingModels: boolean;
+  shortcuts: ShortcutsConfig;
 }
 
 const initialState: ConfigState = {
@@ -25,20 +27,25 @@ const initialState: ConfigState = {
   searchBaseUrl: '',
   fetchedModels: [],
   isLoadingModels: false,
+  shortcuts: DEFAULT_SHORTCUTS,
 };
 
 const configSlice = createSlice({
   name: 'config',
   initialState,
   reducers: {
-    loadFromStorage(state, action: PayloadAction<APIConfig>) {
-      state.provider = action.payload.provider;
-      state.baseUrl = action.payload.baseUrl;
-      state.apiKey = action.payload.apiKey;
-      state.defaultModel = action.payload.defaultModel;
-      state.temperature = action.payload.temperature;
-      state.maxTokens = action.payload.maxTokens;
-      state.topP = action.payload.topP;
+    loadFromStorage(state, action: PayloadAction<Partial<APIConfig> & { shortcuts?: ShortcutsConfig }>) {
+      if (action.payload.provider) state.provider = action.payload.provider;
+      if (action.payload.baseUrl) state.baseUrl = action.payload.baseUrl;
+      if (action.payload.apiKey) state.apiKey = action.payload.apiKey;
+      if (action.payload.defaultModel) state.defaultModel = action.payload.defaultModel;
+      if (action.payload.temperature !== undefined) state.temperature = action.payload.temperature;
+      if (action.payload.maxTokens) state.maxTokens = action.payload.maxTokens;
+      if (action.payload.topP !== undefined) state.topP = action.payload.topP;
+      // Merge shortcuts if present, filling in defaults for missing keys
+      if (action.payload.shortcuts) {
+        state.shortcuts = { ...DEFAULT_SHORTCUTS, ...action.payload.shortcuts };
+      }
     },
     setProvider(state, action: PayloadAction<APIProvider>) {
       const preset = PROVIDER_PRESETS[action.payload];
@@ -78,6 +85,15 @@ const configSlice = createSlice({
     },
     setLoadingModels(state, action: PayloadAction<boolean>) {
       state.isLoadingModels = action.payload;
+    },
+    setShortcut(state, action: PayloadAction<{ actionId: ShortcutActionId; keys: string }>) {
+      state.shortcuts[action.payload.actionId] = action.payload.keys;
+    },
+    resetShortcut(state, action: PayloadAction<ShortcutActionId>) {
+      state.shortcuts[action.payload] = DEFAULT_SHORTCUTS[action.payload];
+    },
+    resetAllShortcuts(state) {
+      state.shortcuts = { ...DEFAULT_SHORTCUTS };
     },
     resetToDefaults() {
       return initialState;

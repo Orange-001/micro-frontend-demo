@@ -136,6 +136,7 @@ export interface APIConfig {
   maxTokens: number;
   topP: number;
   searchBaseUrl?: string;
+  shortcuts?: Record<string, string>;
 }
 
 export interface ProviderPreset {

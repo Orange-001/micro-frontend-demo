@@ -62,6 +62,8 @@ export function InputArea() {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // 中文输入法正在组合时，不触发发送
+      if (e.nativeEvent.isComposing) return;
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSend();

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Drawer,
@@ -14,10 +14,12 @@ import {
   Space,
   message,
 } from 'antd';
+import { KeyOutlined } from '@ant-design/icons';
 import type { RootState } from '../../store';
 import { configActions } from '../../store/configSlice';
 import { uiActions } from '../../store/uiSlice';
 import { fetchModels } from '../../services/modelFetcher';
+import { ShortcutsConfigModal } from './ShortcutsConfigModal';
 import type { APIProvider, CodeTheme } from '../../types/chat';
 import { CODE_THEMES } from '../../constants/codeThemes';
 
@@ -30,6 +32,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
   const dispatch = useDispatch();
   const config = useSelector((s: RootState) => s.config);
   const codeTheme = useSelector((s: RootState) => s.ui.codeTheme);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const fetchModelsIfNeeded = useCallback(async () => {
     if (config.provider === 'custom' || !config.apiKey) return;
@@ -187,6 +190,16 @@ export function SettingsDrawer({ open, onClose }: Props) {
         />
       </Form.Item>
 
+      <Form.Item label="快捷键">
+        <Button
+          icon={<KeyOutlined />}
+          onClick={() => setShortcutsOpen(true)}
+          block
+        >
+          自定义快捷键
+        </Button>
+      </Form.Item>
+
       <Collapse
         ghost
         items={[
@@ -255,6 +268,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
       }
     >
       {formContent}
+      <ShortcutsConfigModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </Drawer>
   );
 }

@@ -14,6 +14,7 @@ import { memoryActions } from '../store/memorySlice';
 import { storageService } from '../services/storageService';
 import { ChatLayout } from '../components/chat/ChatLayout';
 import type { APIConfig, MemoryItem } from '../types/chat';
+import type { ShortcutsConfig } from '../utils/shortcuts';
 
 export function ChatView() {
   const dispatch = useDispatch();
@@ -33,7 +34,7 @@ export function ChatView() {
     }>();
     if (savedUI) dispatch(uiActions.loadFromStorage(savedUI));
 
-    const savedConfig = storageService.loadConfig<APIConfig>();
+    const savedConfig = storageService.loadConfig<Partial<APIConfig> & { shortcuts?: ShortcutsConfig }>();
     if (savedConfig) dispatch(configActions.loadFromStorage(savedConfig));
 
     const savedMemory = storageService.loadMemory<{
