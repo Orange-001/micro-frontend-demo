@@ -126,7 +126,7 @@ const RESPONSE_KEYS = Object.keys(RESPONSES);
 /**
  * 根据用户输入关键词匹配响应，找不到则随机选择
  */
-export function getMatchedResponse(input: string): string {
+export function getMatchedResponse(input: string, webSearch?: boolean): string {
   const lower = input.toLowerCase();
   if (lower.includes('代码') || lower.includes('code') || lower.includes('hook') || lower.includes('函数')) {
     return RESPONSES.code;
@@ -143,6 +143,35 @@ export function getMatchedResponse(input: string): string {
   if (lower.includes('agent') || lower.includes('分析') || lower.includes('搜索')) {
     return RESPONSES.agent;
   }
+
+  // 联网搜索模式：注入搜索结果上下文
+  if (webSearch) {
+    return `> 🔍 **已搜索网络内容**
+
+基于最新的搜索结果，以下是关于"${input}"的信息：
+
+1. **最新进展**：该技术在过去几个月有了显著更新，社区讨论热度较高
+2. **实践建议**：多数开发者推荐结合具体场景使用，注意性能与可维护性的平衡
+3. **社区观点**：主流技术博客普遍认为这是一个值得关注的方向
+
+---
+
+这是一个很好的问题！让我来详细解释一下。
+
+在现代 Web 开发中，有几个关键概念需要理解：
+
+1. **组件化开发**：将 UI 拆分为独立、可复用的组件
+2. **状态管理**：使用集中式状态管理（如 Redux）或分散式（如 React Context）
+3. **类型安全**：TypeScript 提供编译时类型检查，减少运行时错误
+
+\`\`\`javascript
+// 示例：一个简单的状态管理
+const [state, dispatch] = useReducer(reducer, initialState);
+\`\`\`
+
+希望这个解释对你有帮助！如果有更多问题，随时提问。`;
+  }
+
   // 随机选择
   const key = RESPONSE_KEYS[Math.floor(Math.random() * RESPONSE_KEYS.length)];
   return RESPONSES[key];

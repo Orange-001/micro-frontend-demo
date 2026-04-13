@@ -123,6 +123,7 @@ export interface StreamingOptions {
   apiConfig?: APIConfig;
   systemMessage?: string;
   deepThinking?: boolean;
+  webSearch?: boolean;
   attachments?: PendingFileAttachment[];
 }
 
@@ -134,6 +135,7 @@ export interface APIConfig {
   temperature: number;
   maxTokens: number;
   topP: number;
+  searchBaseUrl?: string;
 }
 
 export interface ProviderPreset {

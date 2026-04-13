@@ -1,7 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Theme, CodeTheme } from '../types/chat';
 import { storageService } from '../services/storageService';
-import { PROVIDER_PRESETS } from '../constants/providers';
 import { getDefaultCodeTheme } from '../constants/codeThemes';
 
 interface UIState {
@@ -20,7 +19,7 @@ const initialState: UIState = {
   sidebarCollapsed: savedUI?.sidebarCollapsed ?? false,
   theme: savedUI?.theme ?? 'light',
   codeTheme: savedUI?.codeTheme ?? 'github-dark',
-  selectedModel: savedUI?.selectedModel ?? PROVIDER_PRESETS.openrouter.models[0].id,
+  selectedModel: savedUI?.selectedModel ?? '',
   searchQuery: '',
   webSearchEnabled: false,
   deepThinkingEnabled: false,

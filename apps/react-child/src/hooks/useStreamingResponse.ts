@@ -42,6 +42,7 @@ export function useStreamingResponse() {
   const config = useSelector((s: RootState) => s.config);
   const memory = useSelector((s: RootState) => s.memory);
   const deepThinkingEnabled = useSelector((s: RootState) => s.ui.deepThinkingEnabled);
+  const webSearchEnabled = useSelector((s: RootState) => s.ui.webSearchEnabled);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -115,6 +116,7 @@ export function useStreamingResponse() {
           apiConfig,
           systemMessage: systemMessage ?? undefined,
           deepThinking: deepThinkingEnabled,
+          webSearch: webSearchEnabled,
           attachments: imageAttachments,
         });
 
@@ -189,7 +191,7 @@ export function useStreamingResponse() {
         abortControllerRef.current = null;
       }
     },
-    [activeId, conversations, dispatch, selectedModel, config, memory, deepThinkingEnabled],
+    [activeId, conversations, dispatch, selectedModel, config, memory, deepThinkingEnabled, webSearchEnabled],
   );
 
   const stopStreaming = useCallback(() => {

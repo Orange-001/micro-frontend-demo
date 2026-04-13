@@ -22,8 +22,15 @@
  * - 需要处理"粘包"（一次 read 包含多个事件）和"分包"（一个事件跨多次 read）
  */
 
-import type { StreamChunk, StreamingOptions, Message, APIConfig, PendingFileAttachment } from '../types/chat';
+import type {
+  StreamChunk,
+  StreamingOptions,
+  Message,
+  APIConfig,
+  PendingFileAttachment,
+} from '../types/chat';
 import { getMatchedResponse } from './mockResponses';
+import { searchWeb, formatSearchContext } from './webSearch';
 
 /**
  * INTERVIEW: 一面1 - Promise + async generator 处理异步流
@@ -43,7 +50,7 @@ export async function* streamChat(
   if (apiConfig?.apiKey) {
     yield* streamFromRealAPI(messages, options, apiConfig, systemMessage);
   } else {
-    yield* streamFromMock(messages, signal);
+    yield* streamFromMock(messages, signal, options.webSearch);
   }
 }
 
@@ -111,7 +118,7 @@ async function* streamFromRealAPI(
   // 构建请求头
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiConfig.apiKey}`,
+    Authorization: `Bearer ${apiConfig.apiKey}`,
   };
 
   // OpenRouter 需要额外 headers
@@ -132,6 +139,33 @@ async function* streamFromRealAPI(
   // 深度思考：显式控制模型推理行为
   // Qwen3 等模型默认开启 thinking，必须显式传 "off" 才能关闭
   bodyObj.reasoning_effort = options.deepThinking ? 'high' : 'none';
+
+  // 联网搜索：不同提供商使用不同方式
+  if (options.webSearch) {
+    if (apiConfig.provider === 'openrouter') {
+      // OpenRouter 原生支持 plugins
+      bodyObj.plugins = [{ id: 'web' }];
+    } else if (apiConfig.provider === 'openai') {
+      // OpenAI GPT-4o+ 原生支持 web_search 工具
+      bodyObj.tools = [{ type: 'web_search' as const }];
+    } else {
+      // Custom 提供商：通过 SearXNG 等外部搜索获取结果，注入到 system message 中
+      const searchUrl = apiConfig.searchBaseUrl;
+      if (searchUrl && lastUserMsg) {
+        try {
+          const results = await searchWeb(lastUserMsg.content, searchUrl);
+          const searchContext = formatSearchContext(results);
+          const existingSystemMessage = bodyObj.systemMessage as string | undefined;
+          bodyObj.systemMessage = existingSystemMessage
+            ? `${existingSystemMessage}\n\n${searchContext}`
+            : searchContext;
+        } catch (err: any) {
+          // 搜索失败时不影响正常对话，静默跳过
+          console.warn('[webSearch] search failed:', err.message);
+        }
+      }
+    }
+  }
 
   const body = JSON.stringify(bodyObj);
 
@@ -198,9 +232,10 @@ async function* streamFromRealAPI(
 async function* streamFromMock(
   messages: Message[],
   signal?: AbortSignal,
+  webSearch?: boolean,
 ): AsyncGenerator<StreamChunk> {
   const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
-  const responseText = getMatchedResponse(lastUserMessage?.content ?? '');
+  const responseText = getMatchedResponse(lastUserMessage?.content ?? '', webSearch);
 
   const mockStream = createMockSSEStream(responseText);
   const reader = mockStream.getReader();
