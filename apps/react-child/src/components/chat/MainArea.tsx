@@ -14,19 +14,22 @@ export function MainArea() {
   const activeConversation = activeId ? conversations[activeId] : null;
   const hasMessages = activeConversation && activeConversation.messages.length > 0;
 
-  const { shouldSuggestCompaction, estimatedTokens, isCompacting, compact, dismiss } =
+  const { shouldSuggestCompaction, estimatedTokens, compactionState, compact, dismiss, resetState } =
     useCompaction();
+
+  const showCompactionBar = shouldSuggestCompaction || compactionState !== 'idle';
 
   return (
     <Wrapper>
       <ChatHeader />
       {hasMessages ? <MessageList /> : <WelcomeScreen />}
-      {shouldSuggestCompaction && (
+      {showCompactionBar && (
         <CompactionBar
           tokens={estimatedTokens}
-          isCompacting={isCompacting}
+          compactionState={compactionState}
           onCompact={compact}
           onDismiss={dismiss}
+          onResetState={resetState}
         />
       )}
       <InputArea />

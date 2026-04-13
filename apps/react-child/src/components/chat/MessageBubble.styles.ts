@@ -105,6 +105,21 @@ export const ActionsRow = styled.div`
   ${BubbleWrapper}:hover & {
     opacity: 1;
   }
+
+  .edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    padding: 2px 4px;
+    font-size: 14px;
+    border-radius: 4px;
+    transition: color 0.15s;
+
+    &:hover {
+      color: var(--accent-color);
+    }
+  }
 `;
 
 export const AttachmentGrid = styled.div`
@@ -143,5 +158,68 @@ export const AttachmentFile = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+`;
+
+export const EditContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const EditTextarea = styled.textarea`
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  resize: vertical;
+  font-family: inherit;
+  outline: none;
+  min-height: 60px;
+
+  &:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px var(--accent-color);
+  }
+`;
+
+export const EditButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+
+  button {
+    padding: 4px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+  }
+
+  button:first-child {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+
+  button:last-child {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+
+    &:hover {
+      color: var(--text-primary);
+    }
   }
 `;

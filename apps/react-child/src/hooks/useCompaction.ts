@@ -15,25 +15,27 @@ import {
 } from '../utils/compaction';
 import { streamChat } from '../services/streamingService';
 
+export type CompactionState = 'idle' | 'compacting' | 'success' | 'error';
+
 export function useCompaction() {
   const dispatch = useDispatch<AppDispatch>();
   const activeId = useSelector((s: RootState) => s.chat.activeConversationId);
   const conversations = useSelector((s: RootState) => s.chat.conversations);
   const config = useSelector((s: RootState) => s.config);
   const messages = activeId ? (conversations[activeId]?.messages ?? []) : [];
-  const [isCompacting, setIsCompacting] = useState(false);
+  const [state, setState] = useState<CompactionState>('idle');
   const [dismissed, setDismissed] = useState(false);
 
   const estimatedTokens = useMemo(() => estimateConversationTokens(messages), [messages]);
 
   const shouldSuggestCompaction =
     !dismissed &&
-    !isCompacting &&
+    state === 'idle' &&
     (messages.length > COMPACT_MESSAGE_THRESHOLD || estimatedTokens > COMPACT_TOKEN_THRESHOLD);
 
   const compact = useCallback(async () => {
     if (!activeId) return;
-    setIsCompacting(true);
+    setState('compacting');
 
     try {
       let { toCompact, toKeep } = getCompactionCandidates(messages);
@@ -71,22 +73,26 @@ export function useCompaction() {
         }),
       );
 
+      setState('success');
       antdMessage.success(`已压缩 ${toCompact.length} 条消息`);
     } catch (err) {
       console.error('Compaction failed:', err);
-    } finally {
-      setIsCompacting(false);
+      setState('error');
+      antdMessage.error('压缩失败，请重试');
     }
   }, [activeId, messages, config, dispatch]);
 
   const dismiss = useCallback(() => setDismissed(true), []);
 
+  const resetState = useCallback(() => setState('idle'), []);
+
   return {
     shouldSuggestCompaction,
     estimatedTokens,
     messageCount: messages.length,
-    isCompacting,
+    compactionState: state,
     compact,
     dismiss,
+    resetState,
   };
 }

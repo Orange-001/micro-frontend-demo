@@ -194,9 +194,118 @@ export function useStreamingResponse() {
     [activeId, conversations, dispatch, selectedModel, config, memory, deepThinkingEnabled, webSearchEnabled],
   );
 
+  /**
+   * 编辑历史消息并重新生成回复
+   * - 调用 editUserMessage 更新消息内容并截断后续消息
+   * - 以截断后的消息列表作为上下文重新请求 API
+   */
+  const editAndResendMessage = useCallback(
+    async (conversationId: string, messageId: string, newContent: string) => {
+      // 1. 更新消息并截断后续内容
+      dispatch(chatActions.editUserMessage({ conversationId, messageId, content: newContent }));
+
+      const conv = conversations[conversationId];
+      const messages = (conv?.messages ?? []).filter(
+        (m) => !m.content.includes('⚠️ Error:') && !m.content.includes('⚠️ 请求失败:'),
+      );
+
+      const assistantMsgId = `msg-${Date.now()}-assistant`;
+      dispatch(chatActions.startStreaming({ conversationId, messageId: assistantMsgId }));
+
+      const controller = createStreamAbortController();
+      abortControllerRef.current = controller;
+
+      const systemMessage = buildMemorySystemMessage(
+        memory.items,
+        memory.globalEnabled,
+        conv?.memoryEnabled ?? true,
+      );
+
+      const apiConfig: APIConfig | undefined = config.apiKey ? config : undefined;
+
+      try {
+        const stream = streamChat(messages, {
+          model: selectedModel,
+          signal: controller.signal,
+          apiConfig,
+          systemMessage: systemMessage ?? undefined,
+          deepThinking: deepThinkingEnabled,
+          webSearch: webSearchEnabled,
+        });
+
+        let isInReasoning = false;
+
+        for await (const chunk of stream) {
+          if (chunk.type === 'reasoning') {
+            let prefix = '';
+            if (!isInReasoning) {
+              isInReasoning = true;
+              prefix = '> **💭 思考过程**\n>\n> ';
+            }
+            const quotedContent = chunk.content.replace(/\n/g, '\n> ');
+            flushSync(() => {
+              dispatch(
+                chatActions.appendStreamChunk({
+                  conversationId,
+                  content: prefix + quotedContent,
+                }),
+              );
+            });
+            await frameYield();
+          } else if (chunk.type === 'text') {
+            let prefix = '';
+            if (isInReasoning) {
+              isInReasoning = false;
+              prefix = '\n\n---\n\n';
+            }
+            flushSync(() => {
+              dispatch(
+                chatActions.appendStreamChunk({
+                  conversationId,
+                  content: prefix + chunk.content,
+                }),
+              );
+            });
+            await frameYield();
+          } else if (chunk.type === 'error') {
+            dispatch(
+              chatActions.appendStreamChunk({
+                conversationId,
+                content: `\n\n⚠️ Error: ${chunk.content}`,
+              }),
+            );
+            break;
+          }
+        }
+
+        if (isInReasoning) {
+          dispatch(
+            chatActions.appendStreamChunk({
+              conversationId,
+              content: '\n\n---\n\n',
+            }),
+          );
+        }
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          dispatch(
+            chatActions.appendStreamChunk({
+              conversationId,
+              content: `\n\n⚠️ 请求失败: ${error.message}`,
+            }),
+          );
+        }
+      } finally {
+        dispatch(chatActions.finalizeStreaming(conversationId));
+        abortControllerRef.current = null;
+      }
+    },
+    [conversations, dispatch, selectedModel, config, memory, deepThinkingEnabled, webSearchEnabled],
+  );
+
   const stopStreaming = useCallback(() => {
     abortControllerRef.current?.abort();
   }, []);
 
-  return { sendMessage, stopStreaming, isStreaming };
+  return { sendMessage, editAndResendMessage, stopStreaming, isStreaming };
 }

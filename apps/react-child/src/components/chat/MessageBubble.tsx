@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import type { Message } from '../../types/chat';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { MessageActions } from './MessageActions';
-import { FileOutlined } from '@ant-design/icons';
+import { useStreamingResponse } from '../../hooks/useStreamingResponse';
+import { FileOutlined, EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import {
   BubbleWrapper,
   AvatarWrapper,
@@ -12,6 +13,9 @@ import {
   AttachmentGrid,
   AttachmentImage,
   AttachmentFile,
+  EditContainer,
+  EditTextarea,
+  EditButtons,
 } from './MessageBubble.styles';
 
 interface Props {
@@ -21,6 +25,64 @@ interface Props {
 
 export const MessageBubble = memo(function MessageBubble({ message, conversationId }: Props) {
   const isUser = message.role === 'user';
+  const { editAndResendMessage } = useStreamingResponse();
+
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.content);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (editing) textareaRef.current?.focus();
+  }, [editing]);
+
+  const handleEdit = useCallback(() => {
+    setEditContent(message.content);
+    setEditing(true);
+  }, [message.content]);
+
+  const handleCancel = useCallback(() => {
+    setEditing(false);
+  }, []);
+
+  const handleSave = useCallback(() => {
+    const trimmed = editContent.trim();
+    if (!trimmed) return;
+    setEditing(false);
+    editAndResendMessage(conversationId, message.id, trimmed);
+  }, [editContent, conversationId, message.id, editAndResendMessage]);
+
+  if (editing && isUser) {
+    return (
+      <BubbleWrapper $role="user">
+        <AvatarWrapper $role="user">👤</AvatarWrapper>
+        <ContentWrapper $role="user">
+          <EditContainer>
+            <EditTextarea
+              ref={textareaRef}
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  handleSave();
+                }
+                if (e.key === 'Escape') handleCancel();
+              }}
+              rows={3}
+            />
+            <EditButtons>
+              <button onClick={handleSave} title="保存并发送">
+                <CheckOutlined /> 保存
+              </button>
+              <button onClick={handleCancel} title="取消">
+                <CloseOutlined /> 取消
+              </button>
+            </EditButtons>
+          </EditContainer>
+        </ContentWrapper>
+      </BubbleWrapper>
+    );
+  }
 
   return (
     <BubbleWrapper $role={message.role}>
@@ -59,6 +121,11 @@ export const MessageBubble = memo(function MessageBubble({ message, conversation
         )}
         {!message.isStreaming && (
           <ActionsRow>
+            {isUser && (
+              <button className="edit-btn" onClick={handleEdit} title="编辑并重新发送">
+                <EditOutlined />
+              </button>
+            )}
             <MessageActions message={message} conversationId={conversationId} />
           </ActionsRow>
         )}
