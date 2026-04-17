@@ -28,7 +28,8 @@ interface UseVirtualScrollOptions {
 
 interface VirtualItem {
   index: number;
-  offsetTop: number;
+  offsetTop: number; // 相对于列表顶部的绝对位置
+  scrollTop: number; // 相对于可视区顶部的位置（用于绝对定位的 top）
 }
 
 export function useVirtualScroll({
@@ -57,7 +58,12 @@ export function useVirtualScroll({
     }
   }, []);
 
-  // 监听滚动事件
+  // 清空高度缓存（切换对话时调用）
+  const resetHeightCache = useCallback(() => {
+    heightCache.current.clear();
+  }, []);
+
+  // 监听滚动事件和容器尺寸
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -77,41 +83,78 @@ export function useVirtualScroll({
     };
   }, [containerRef]);
 
-  // 计算可见范围
-  const { visibleItems, totalHeight, startPadding } = useMemo(() => {
+  // 计算可见范围和总高度
+  const { visibleItems, totalHeight, startPadding, endPadding } = useMemo(() => {
+    // 第一遍：计算所有项目的偏移位置和总高度
+    const offsets: number[] = [];
     let offset = 0;
-    let startIndex = -1;
-    let endIndex = -1;
-    const items: VirtualItem[] = [];
-
     for (let i = 0; i < itemCount; i++) {
-      const h = getItemHeight(i);
+      offsets.push(offset);
+      offset += getItemHeight(i);
+    }
+    const total = offset;
 
-      if (startIndex === -1 && offset + h > scrollTop - overscan * estimatedItemHeight) {
-        startIndex = i;
-      }
-
-      if (startIndex !== -1 && endIndex === -1) {
-        items.push({ index: i, offsetTop: offset });
-      }
-
-      offset += h;
-
-      if (
-        endIndex === -1 &&
-        offset > scrollTop + containerHeight + overscan * estimatedItemHeight
-      ) {
-        endIndex = i;
-      }
+    if (itemCount === 0 || containerHeight <= 0) {
+      return { visibleItems: [] as VirtualItem[], totalHeight: 0, startPadding: 0, endPadding: 0 };
     }
 
-    if (startIndex === -1) startIndex = 0;
-    if (endIndex === -1) endIndex = itemCount - 1;
+    // 第二遍：二分查找确定可见范围
+    const overscanTop = overscan * estimatedItemHeight;
+    const overscanBottom = overscan * estimatedItemHeight;
+
+    // 查找第一个 offset > scrollTop - overscanTop 的索引
+    let startIndex = 0;
+    let lo = 0;
+    let hi = itemCount - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (offsets[mid] >= scrollTop - overscanTop) {
+        startIndex = mid;
+        hi = mid - 1;
+      } else {
+        lo = mid + 1;
+      }
+    }
+    // 确保至少往前取一个
+    startIndex = Math.max(0, startIndex - 1);
+
+    // 查找最后一个 offset < scrollTop + containerHeight + overscanBottom 的索引
+    let endIndex = itemCount - 1;
+    lo = 0;
+    hi = itemCount - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (offsets[mid] <= scrollTop + containerHeight + overscanBottom) {
+        endIndex = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    // 确保至少往后取一个
+    endIndex = Math.min(itemCount - 1, endIndex + 1);
+
+    // 构建虚拟项目列表
+    const items: VirtualItem[] = [];
+    for (let i = startIndex; i <= endIndex; i++) {
+      items.push({
+        index: i,
+        offsetTop: offsets[i],
+        scrollTop: offsets[i] - offsets[startIndex],
+      });
+    }
+
+    // 计算可见区域内项目的总高度
+    let renderedHeight = 0;
+    for (let i = startIndex; i <= endIndex; i++) {
+      renderedHeight += getItemHeight(i);
+    }
 
     return {
       visibleItems: items,
-      totalHeight: offset,
-      startPadding: items[0]?.offsetTop ?? 0,
+      totalHeight: total,
+      startPadding: offsets[startIndex] ?? 0,
+      endPadding: total - (offsets[startIndex] ?? 0) - renderedHeight,
     };
   }, [itemCount, scrollTop, containerHeight, getItemHeight, overscan, estimatedItemHeight]);
 
@@ -119,6 +162,8 @@ export function useVirtualScroll({
     visibleItems,
     totalHeight,
     startPadding,
+    endPadding,
     setItemHeight,
+    resetHeightCache,
   };
 }
