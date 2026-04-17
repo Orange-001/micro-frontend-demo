@@ -143,8 +143,8 @@ async function* streamFromRealAPI(
   // 联网搜索：不同提供商使用不同方式
   if (options.webSearch) {
     if (apiConfig.provider === 'openrouter') {
-      // OpenRouter 原生支持 plugins
-      bodyObj.plugins = [{ id: 'web' }];
+      // OpenRouter 使用 tools 方式
+      bodyObj.tools = [{ type: 'openrouter:web_search' as const }];
     } else if (apiConfig.provider === 'openai') {
       // OpenAI GPT-4o+ 原生支持 web_search 工具
       bodyObj.tools = [{ type: 'web_search' as const }];
