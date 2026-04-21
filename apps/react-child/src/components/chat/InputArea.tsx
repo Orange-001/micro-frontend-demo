@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Button, Tooltip, Upload, message } from 'antd';
+import { Button, Tooltip, Upload, message, Image } from 'antd';
 import {
   SendOutlined,
   PauseCircleOutlined,
@@ -15,7 +15,7 @@ import { chatActions } from '../../store/chatSlice';
 import { uiActions } from '../../store/uiSlice';
 import { useStreamingResponse } from '../../hooks/useStreamingResponse';
 import { useAutoResizeTextarea } from '../../hooks/useAutoResizeTextarea';
-import { processFile } from '../../services/fileUtils';
+import { processFile, validateFiles } from '../../services/fileUtils';
 import type { PendingFileAttachment } from '../../types/chat';
 import {
   InputWrapper,
@@ -94,6 +94,38 @@ export function InputArea() {
     setPendingFiles((prev) => prev.filter((f) => f.id !== id));
   }, []);
 
+  const handlePaste = useCallback(
+    async (e: React.ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const files: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file') {
+          const file = item.getAsFile();
+          if (file) files.push(file);
+        }
+      }
+
+      if (files.length === 0) return;
+
+      e.preventDefault();
+
+      const { valid, errors } = validateFiles(files);
+      if (errors.length) errors.forEach((err) => message.warning(err));
+
+      setUploading(true);
+      try {
+        const processed = await Promise.all(valid.map(processFile));
+        setPendingFiles((prev) => [...prev, ...processed]);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [],
+  );
+
   return (
     <>
       <InputWrapper>
@@ -103,6 +135,7 @@ export function InputArea() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="发送消息..."
             rows={1}
           />
@@ -111,7 +144,13 @@ export function InputArea() {
               {pendingFiles.map((f) => (
                 <PreviewCard key={f.id}>
                   {f.preview ? (
-                    <img src={f.preview} alt={f.name} />
+                    <Image
+                      src={f.preview}
+                      alt={f.name}
+                      preview={{
+                        mask: false,
+                      }}
+                    />
                   ) : (
                     <div className="file-icon">
                       <FileOutlined />
@@ -124,7 +163,11 @@ export function InputArea() {
                     icon={<CloseOutlined />}
                     size="small"
                     type="text"
-                    onClick={() => handleRemoveFile(f.id)}
+                    className="preview-remove-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFile(f.id);
+                    }}
                   />
                 </PreviewCard>
               ))}

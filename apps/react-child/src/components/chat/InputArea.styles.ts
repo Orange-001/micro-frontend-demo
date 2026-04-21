@@ -87,6 +87,11 @@ export const PreviewCard = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+
+  &:hover .preview-remove-btn {
+    opacity: 1;
+  }
 
   img {
     width: 100%;
@@ -116,16 +121,26 @@ export const PreviewCard = styled.div`
 `;
 
 export const PreviewRemoveBtn = styled(Button)`
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: var(--bg-secondary);
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-size: 10px;
+  && {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 10px;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 2;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+  }
 `;
