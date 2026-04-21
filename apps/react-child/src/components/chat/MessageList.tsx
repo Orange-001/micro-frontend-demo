@@ -30,7 +30,7 @@ export function MessageList() {
   const activeId = useSelector((s: RootState) => s.chat.activeConversationId);
   const conversations = useSelector((s: RootState) => s.chat.conversations);
   const isStreaming = useSelector((s: RootState) => s.chat.isStreaming);
-  const messages = activeId ? conversations[activeId]?.messages ?? [] : [];
+  const messages = activeId ? (conversations[activeId]?.messages ?? []) : [];
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -38,13 +38,12 @@ export function MessageList() {
   const isProgrammaticScroll = useRef(false);
 
   // 虚拟滚动 hook（始终初始化，即使未启用虚拟滚动）
-  const { visibleItems, totalHeight, setItemHeight, resetHeightCache } =
-    useVirtualScroll({
-      itemCount: messages.length,
-      estimatedItemHeight: ESTIMATED_ITEM_HEIGHT,
-      overscan: 5,
-      containerRef: scrollRef,
-    });
+  const { visibleItems, totalHeight, setItemHeight, resetHeightCache } = useVirtualScroll({
+    itemCount: messages.length,
+    estimatedItemHeight: ESTIMATED_ITEM_HEIGHT,
+    overscan: 5,
+    containerRef: scrollRef,
+  });
 
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
@@ -111,26 +110,24 @@ export function MessageList() {
   return (
     <Wrapper ref={scrollRef}>
       <MessagesContainer style={{ height: useVirtual ? totalHeight : undefined }}>
-        {useVirtual ? (
-          visibleItems.map((virtItem) => {
-            const msg = messages[virtItem.index];
-            if (!msg) return null;
-            return (
-              <VirtualItem key={msg.id} $offsetTop={virtItem.offsetTop}>
-                <VirtualMessageItem
-                  message={msg}
-                  messageIndex={virtItem.index}
-                  conversationId={activeId}
-                  onHeightChange={setItemHeight}
-                />
-              </VirtualItem>
-            );
-          })
-        ) : (
-          messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} conversationId={activeId} />
-          ))
-        )}
+        {useVirtual
+          ? visibleItems.map((virtItem) => {
+              const msg = messages[virtItem.index];
+              if (!msg) return null;
+              return (
+                <VirtualItem key={msg.id} $offsetTop={virtItem.offsetTop}>
+                  <VirtualMessageItem
+                    message={msg}
+                    messageIndex={virtItem.index}
+                    conversationId={activeId}
+                    onHeightChange={setItemHeight}
+                  />
+                </VirtualItem>
+              );
+            })
+          : messages.map((msg) => (
+              <MessageBubble key={msg.id} message={msg} conversationId={activeId} />
+            ))}
       </MessagesContainer>
       {showScrollBtn && <ScrollToBottom onClick={scrollToBottom} />}
     </Wrapper>

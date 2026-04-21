@@ -36,7 +36,8 @@ export function groupConversationsByDate(
     groups.get(group)!.push(conv);
   }
 
-  return GROUP_ORDER
-    .filter((g) => groups.has(g))
-    .map((group) => ({ group, conversations: groups.get(group)! }));
+  return GROUP_ORDER.filter((g) => groups.has(g)).map((group) => ({
+    group,
+    conversations: groups.get(group)!,
+  }));
 }

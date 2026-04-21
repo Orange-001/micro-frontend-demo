@@ -34,7 +34,10 @@ const configSlice = createSlice({
   name: 'config',
   initialState,
   reducers: {
-    loadFromStorage(state, action: PayloadAction<Partial<APIConfig> & { shortcuts?: ShortcutsConfig }>) {
+    loadFromStorage(
+      state,
+      action: PayloadAction<Partial<APIConfig> & { shortcuts?: ShortcutsConfig }>,
+    ) {
       if (action.payload.provider) state.provider = action.payload.provider;
       if (action.payload.baseUrl) state.baseUrl = action.payload.baseUrl;
       if (action.payload.apiKey) state.apiKey = action.payload.apiKey;

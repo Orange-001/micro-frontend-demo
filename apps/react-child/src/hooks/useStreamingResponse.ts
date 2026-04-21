@@ -48,7 +48,7 @@ export function useStreamingResponse() {
 
   const sendMessage = useCallback(
     async (content: string, attachments?: PendingFileAttachment[]) => {
-      let conversationId = activeId;
+      const conversationId = activeId;
 
       if (!conversationId) {
         dispatch(chatActions.createConversation({ model: selectedModel }));
@@ -103,9 +103,7 @@ export function useStreamingResponse() {
         );
 
         // 构建 API 配置（仅当有 apiKey 时传入）
-        const apiConfig: APIConfig | undefined = config.apiKey
-          ? config
-          : undefined;
+        const apiConfig: APIConfig | undefined = config.apiKey ? config : undefined;
 
         // 仅传递图片附件（有 preview 的为图片）
         const imageAttachments = attachments?.filter((f) => f.preview) ?? [];
@@ -191,7 +189,16 @@ export function useStreamingResponse() {
         abortControllerRef.current = null;
       }
     },
-    [activeId, conversations, dispatch, selectedModel, config, memory, deepThinkingEnabled, webSearchEnabled],
+    [
+      activeId,
+      conversations,
+      dispatch,
+      selectedModel,
+      config,
+      memory,
+      deepThinkingEnabled,
+      webSearchEnabled,
+    ],
   );
 
   /**

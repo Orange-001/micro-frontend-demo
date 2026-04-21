@@ -1,6 +1,7 @@
 # 微前端：Vue + React（UnoCSS / Iconfont / Vite / Redux / Pinia / 路由 / Docker）
 
 这是一个用于演示/落地的微前端工程：
+
 - 容器（Host）：React + Redux + React Router
 - 子应用（Vue）：Vue 3 + Pinia + Vue Router
 - 子应用（React）：React + Redux + React Router
@@ -27,4 +28,3 @@
 3. 访问：`http://localhost:8080/`
 
 说明：`host` 构建时会注入 `VITE_VUE_ENTRY / VITE_REACT_ENTRY`，指向容器内的子应用服务名（便于线上部署时替换为真实域名）。
-

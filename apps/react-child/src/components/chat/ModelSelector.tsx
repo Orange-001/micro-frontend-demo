@@ -37,7 +37,14 @@ export function ModelSelector() {
     } finally {
       setLocalLoading(false);
     }
-  }, [config.provider, config.baseUrl, config.apiKey, config.fetchedModels.length, selected, dispatch]);
+  }, [
+    config.provider,
+    config.baseUrl,
+    config.apiKey,
+    config.fetchedModels.length,
+    selected,
+    dispatch,
+  ]);
 
   useEffect(() => {
     fetchModelsIfNeeded();

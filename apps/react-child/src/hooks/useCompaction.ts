@@ -38,12 +38,11 @@ export function useCompaction() {
     setState('compacting');
 
     try {
-      let { toCompact, toKeep } = getCompactionCandidates(messages);
+      let { toCompact } = getCompactionCandidates(messages);
 
       // 即使没有可压缩候选（消息数 <= keepRecentCount），也允许压缩全部消息
       if (toCompact.length === 0) {
         toCompact = [...messages];
-        toKeep = [];
       }
 
       let summary: string;

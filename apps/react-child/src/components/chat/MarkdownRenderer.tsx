@@ -51,7 +51,7 @@ function extractText(node: React.ReactNode): string {
 
 export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: Props) {
   // 检查是否包含 Agent 步骤标记
-  const { markdownParts, agentSteps } = useMemo(() => parseContent(content), [content]);
+  const { markdownParts } = useMemo(() => parseContent(content), [content]);
 
   return (
     <>
@@ -89,7 +89,11 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: Prop
                   }
 
                   // 代码块 — 保留 rehype-highlight 生成的高亮 span 节点
-                  return <CodeBlock language={match[1]} copyText={codeString}>{children}</CodeBlock>;
+                  return (
+                    <CodeBlock language={match[1]} copyText={codeString}>
+                      {children}
+                    </CodeBlock>
+                  );
                 },
                 img({ src, alt, ...props }) {
                   return (
@@ -121,9 +125,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: Prop
   );
 });
 
-type ContentPart =
-  | { type: 'markdown'; content: string }
-  | { type: 'agent'; steps: any[] };
+type ContentPart = { type: 'markdown'; content: string } | { type: 'agent'; steps: any[] };
 
 function parseContent(content: string): { markdownParts: ContentPart[]; agentSteps: any[] } {
   const parts: ContentPart[] = [];

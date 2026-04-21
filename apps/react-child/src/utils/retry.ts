@@ -44,10 +44,7 @@ export function withTimeout<T>(
 /**
  * 带指数退避的重试机制
  */
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  options: RetryOptions,
-): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions): Promise<T> {
   const { maxRetries, baseDelay, timeout, onRetry } = options;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {

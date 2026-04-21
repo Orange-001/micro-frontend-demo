@@ -94,37 +94,34 @@ export function InputArea() {
     setPendingFiles((prev) => prev.filter((f) => f.id !== id));
   }, []);
 
-  const handlePaste = useCallback(
-    async (e: React.ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
+  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
 
-      const files: File[] = [];
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.kind === 'file') {
-          const file = item.getAsFile();
-          if (file) files.push(file);
-        }
+    const files: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) files.push(file);
       }
+    }
 
-      if (files.length === 0) return;
+    if (files.length === 0) return;
 
-      e.preventDefault();
+    e.preventDefault();
 
-      const { valid, errors } = validateFiles(files);
-      if (errors.length) errors.forEach((err) => message.warning(err));
+    const { valid, errors } = validateFiles(files);
+    if (errors.length) errors.forEach((err) => message.warning(err));
 
-      setUploading(true);
-      try {
-        const processed = await Promise.all(valid.map(processFile));
-        setPendingFiles((prev) => [...prev, ...processed]);
-      } finally {
-        setUploading(false);
-      }
-    },
-    [],
-  );
+    setUploading(true);
+    try {
+      const processed = await Promise.all(valid.map(processFile));
+      setPendingFiles((prev) => [...prev, ...processed]);
+    } finally {
+      setUploading(false);
+    }
+  }, []);
 
   return (
     <>
@@ -189,9 +186,7 @@ export function InputArea() {
                     icon={<PaperClipOutlined />}
                     style={{
                       color:
-                        pendingFiles.length > 0
-                          ? 'var(--accent-color)'
-                          : 'var(--text-tertiary)',
+                        pendingFiles.length > 0 ? 'var(--accent-color)' : 'var(--text-tertiary)',
                     }}
                   />
                 </Upload>
@@ -238,13 +233,9 @@ export function InputArea() {
                   disabled={!input.trim() && pendingFiles.length === 0}
                   style={{
                     background:
-                      input.trim() || pendingFiles.length > 0
-                        ? 'var(--accent-color)'
-                        : undefined,
+                      input.trim() || pendingFiles.length > 0 ? 'var(--accent-color)' : undefined,
                     borderColor:
-                      input.trim() || pendingFiles.length > 0
-                        ? 'var(--accent-color)'
-                        : undefined,
+                      input.trim() || pendingFiles.length > 0 ? 'var(--accent-color)' : undefined,
                   }}
                 />
               )}

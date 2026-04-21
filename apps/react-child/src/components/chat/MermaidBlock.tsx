@@ -32,8 +32,8 @@ let idCounter = 0;
 function preprocessChart(raw: string): string {
   return raw
     .replace(/\[([^\]"]+)\]/g, (m, text) => (/[(){}]/.test(text) ? `["${text}"]` : m))
-    .replace(/\(([^)"]+)\)/g, (m, text) => (/[\[\]{}]/.test(text) ? `("${text}")` : m))
-    .replace(/\{([^}"]+)\}/g, (m, text) => (/[()\[\]]/.test(text) ? `{"${text}"}` : m));
+    .replace(/\(([^)"]+)\)/g, (m, text) => (/[[\]{}]/.test(text) ? `("${text}")` : m))
+    .replace(/\{([^}"]+)\}/g, (m, text) => (/[()[\]]/.test(text) ? `{"${text}"}` : m));
 }
 
 /** 将 SVG 字符串转为 PNG Blob（2x 高清） */
@@ -91,7 +91,10 @@ function svgToPngBlob(svgStr: string, scale = 4): Promise<Blob> {
       const ctx = canvas.getContext('2d')!;
       ctx.scale(scale, scale);
       ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))), 'image/png');
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+        'image/png',
+      );
     };
     img.onerror = () => reject(new Error('SVG load failed'));
     img.src = dataUrl;
@@ -208,7 +211,9 @@ export const MermaidBlock = memo(function MermaidBlock({ chart }: Props) {
         if (!cancelled) setError(String(err));
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [chart]);
 
   // ---- actions ----
@@ -235,22 +240,30 @@ export const MermaidBlock = memo(function MermaidBlock({ chart }: Props) {
       a.download = 'mermaid-diagram.png';
       a.click();
       URL.revokeObjectURL(url);
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }, [svg]);
 
   const handleCopySource = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(chart);
       markCopied('source');
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }, [chart, markCopied]);
 
   // ---- error state ----
   if (error) {
     return (
       <Wrapper>
-        <Header><span>mermaid</span></Header>
-        <div style={{ color: 'var(--error-color, #e53e3e)', fontSize: '0.85em', padding: '12px 16px' }}>
+        <Header>
+          <span>mermaid</span>
+        </Header>
+        <div
+          style={{ color: 'var(--error-color, #e53e3e)', fontSize: '0.85em', padding: '12px 16px' }}
+        >
           Mermaid render error: {error}
         </div>
       </Wrapper>
@@ -261,7 +274,9 @@ export const MermaidBlock = memo(function MermaidBlock({ chart }: Props) {
   if (!svg) {
     return (
       <Wrapper>
-        <Header><span>mermaid</span></Header>
+        <Header>
+          <span>mermaid</span>
+        </Header>
         <div style={{ padding: '16px', color: 'var(--text-secondary)', fontSize: '0.85em' }}>
           Rendering diagram...
         </div>
@@ -275,15 +290,34 @@ export const MermaidBlock = memo(function MermaidBlock({ chart }: Props) {
         <span>mermaid</span>
         <Actions>
           <ActionBtn onClick={handleCopyImage} title="复制图片">
-            {copied === 'image' ? <><CheckOutlined /> 已复制</> : <><PictureOutlined /> 复制图片</>}
+            {copied === 'image' ? (
+              <>
+                <CheckOutlined /> 已复制
+              </>
+            ) : (
+              <>
+                <PictureOutlined /> 复制图片
+              </>
+            )}
           </ActionBtn>
           <ActionBtn onClick={handleDownload} title="下载 PNG">
             <DownloadOutlined /> 下载
           </ActionBtn>
           <ActionBtn onClick={handleCopySource} title="复制源代码">
-            {copied === 'source' ? <><CheckOutlined /> 已复制</> : <><CodeOutlined /> 源码</>}
+            {copied === 'source' ? (
+              <>
+                <CheckOutlined /> 已复制
+              </>
+            ) : (
+              <>
+                <CodeOutlined /> 源码
+              </>
+            )}
           </ActionBtn>
-          <ActionBtn onClick={() => setShowSource((v) => !v)} title={showSource ? '隐藏源码' : '查看源码'}>
+          <ActionBtn
+            onClick={() => setShowSource((v) => !v)}
+            title={showSource ? '隐藏源码' : '查看源码'}
+          >
             <CopyOutlined /> {showSource ? '隐藏' : '查看'}源码
           </ActionBtn>
         </Actions>

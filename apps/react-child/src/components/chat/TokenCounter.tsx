@@ -11,7 +11,7 @@ import {
 export function TokenCounter() {
   const activeId = useSelector((s: RootState) => s.chat.activeConversationId);
   const conversations = useSelector((s: RootState) => s.chat.conversations);
-  const messages = activeId ? conversations[activeId]?.messages ?? [] : [];
+  const messages = activeId ? (conversations[activeId]?.messages ?? []) : [];
 
   const tokens = useMemo(() => estimateConversationTokens(messages), [messages]);
 

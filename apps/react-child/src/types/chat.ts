@@ -26,19 +26,9 @@ export type CodeTheme =
   | 'monokai-sublime'
   | 'tokyo-night-dark';
 
-export type DateGroup =
-  | 'Today'
-  | 'Yesterday'
-  | 'Previous 7 Days'
-  | 'Previous 30 Days'
-  | 'Older';
+export type DateGroup = 'Today' | 'Yesterday' | 'Previous 7 Days' | 'Previous 30 Days' | 'Older';
 
-export type GenerativeUIType =
-  | 'text'
-  | 'code'
-  | 'table'
-  | 'chart'
-  | 'agent-steps';
+export type GenerativeUIType = 'text' | 'code' | 'table' | 'chart' | 'agent-steps';
 
 export type StreamStatus = 'idle' | 'connecting' | 'streaming' | 'done' | 'error';
 

@@ -56,11 +56,7 @@ const componentRegistry: Record<string, React.FC<{ data: any }>> = {
   ),
 
   card: ({ data }) => (
-    <Card
-      title={data?.title}
-      size="small"
-      style={{ margin: '12px 0' }}
-    >
+    <Card title={data?.title} size="small" style={{ margin: '12px 0' }}>
       {data?.content}
     </Card>
   ),

@@ -23,39 +23,45 @@ export function ShortcutsConfigModal({ open, onClose }: Props) {
   const recordingRef = useRef<string | null>(null);
   const [recordingAction, setRecordingAction] = useState<string | null>(null);
 
-  const handleKeyCapture = useCallback((e: React.KeyboardEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleKeyCapture = useCallback(
+    (e: React.KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    const keys = eventToKeys(e.nativeEvent);
-    if (!keys) return;
+      const keys = eventToKeys(e.nativeEvent);
+      if (!keys) return;
 
-    const actionId = recordingRef.current;
-    if (!actionId) return;
+      const actionId = recordingRef.current;
+      if (!actionId) return;
 
-    // 检查冲突：这个键组合是否已被其他动作使用
-    for (const [otherId, otherKeys] of Object.entries(shortcuts)) {
-      if (otherId !== actionId && otherKeys === keys) {
-        message.warning(`该快捷键已被「${SHORTCUT_LABELS[otherId as ShortcutActionId]}」使用`);
-        setRecordingAction(null);
-        recordingRef.current = null;
-        return;
+      // 检查冲突：这个键组合是否已被其他动作使用
+      for (const [otherId, otherKeys] of Object.entries(shortcuts)) {
+        if (otherId !== actionId && otherKeys === keys) {
+          message.warning(`该快捷键已被「${SHORTCUT_LABELS[otherId as ShortcutActionId]}」使用`);
+          setRecordingAction(null);
+          recordingRef.current = null;
+          return;
+        }
       }
-    }
 
-    dispatch(configActions.setShortcut({ actionId: actionId as ShortcutActionId, keys }));
-    setRecordingAction(null);
-    recordingRef.current = null;
-  }, [dispatch, shortcuts]);
+      dispatch(configActions.setShortcut({ actionId: actionId as ShortcutActionId, keys }));
+      setRecordingAction(null);
+      recordingRef.current = null;
+    },
+    [dispatch, shortcuts],
+  );
 
   const startRecording = useCallback((actionId: string) => {
     recordingRef.current = actionId;
     setRecordingAction(actionId);
   }, []);
 
-  const resetAction = useCallback((actionId: ShortcutActionId) => {
-    dispatch(configActions.resetShortcut(actionId));
-  }, [dispatch]);
+  const resetAction = useCallback(
+    (actionId: ShortcutActionId) => {
+      dispatch(configActions.resetShortcut(actionId));
+    },
+    [dispatch],
+  );
 
   const resetAll = useCallback(() => {
     dispatch(configActions.resetAllShortcuts());
@@ -79,10 +85,7 @@ export function ShortcutsConfigModal({ open, onClose }: Props) {
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {isRecording ? (
-              <Tag
-                color="blue"
-                style={{ cursor: 'pointer', minWidth: 80, textAlign: 'center' }}
-              >
+              <Tag color="blue" style={{ cursor: 'pointer', minWidth: 80, textAlign: 'center' }}>
                 按下快捷键...
               </Tag>
             ) : (

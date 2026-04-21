@@ -56,7 +56,9 @@ export const SuggestionCard = styled.button`
   color: var(--text-primary);
   font-size: 14px;
   line-height: 1.5;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 
   &:hover {
     background: var(--bg-hover);

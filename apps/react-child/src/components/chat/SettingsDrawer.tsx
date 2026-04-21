@@ -159,7 +159,13 @@ export function SettingsDrawer({ open, onClose }: Props) {
             }}
             options={modelOptions}
             loading={config.isLoadingModels}
-            placeholder={hasLoadedModels ? '选择模型' : config.apiKey ? '正在获取模型列表...' : '请先配置 API Key'}
+            placeholder={
+              hasLoadedModels
+                ? '选择模型'
+                : config.apiKey
+                  ? '正在获取模型列表...'
+                  : '请先配置 API Key'
+            }
             notFoundContent={config.apiKey ? '未找到可用模型' : null}
             style={{ width: '100%' }}
           />
@@ -191,11 +197,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
       </Form.Item>
 
       <Form.Item label="快捷键">
-        <Button
-          icon={<KeyOutlined />}
-          onClick={() => setShortcutsOpen(true)}
-          block
-        >
+        <Button icon={<KeyOutlined />} onClick={() => setShortcutsOpen(true)} block>
           自定义快捷键
         </Button>
       </Form.Item>

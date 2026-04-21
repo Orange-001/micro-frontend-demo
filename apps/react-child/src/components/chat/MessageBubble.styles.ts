@@ -50,9 +50,17 @@ export const ContentWrapper = styled.div<{ $role: string }>`
   color: var(--text-primary);
 
   /* Markdown 内容样式 */
-  p { margin: 0 0 12px; }
-  p:last-child { margin-bottom: 0; }
-  ul, ol { margin: 0 0 12px; padding-left: 24px; }
+  p {
+    margin: 0 0 12px;
+  }
+  p:last-child {
+    margin-bottom: 0;
+  }
+  ul,
+  ol {
+    margin: 0 0 12px;
+    padding-left: 24px;
+  }
   blockquote {
     margin: 0 0 12px;
     padding: 4px 16px;
@@ -65,14 +73,22 @@ export const ContentWrapper = styled.div<{ $role: string }>`
     margin: 0 0 12px;
     font-size: 14px;
   }
-  th, td {
+  th,
+  td {
     border: 1px solid var(--border-color);
     padding: 8px 12px;
     text-align: left;
   }
-  th { background: var(--bg-secondary); font-weight: 600; }
-  a { color: var(--accent-color); }
-  strong { font-weight: 600; }
+  th {
+    background: var(--bg-secondary);
+    font-weight: 600;
+  }
+  a {
+    color: var(--accent-color);
+  }
+  strong {
+    font-weight: 600;
+  }
   hr {
     border: none;
     border-top: 1px solid var(--border-color);

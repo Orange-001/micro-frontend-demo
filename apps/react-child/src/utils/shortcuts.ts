@@ -4,11 +4,7 @@
  */
 
 /** 支持的快捷键动作 ID */
-export type ShortcutActionId =
-  | 'newChat'
-  | 'focusInput'
-  | 'focusSearch'
-  | 'toggleSidebar';
+export type ShortcutActionId = 'newChat' | 'focusInput' | 'focusSearch' | 'toggleSidebar';
 
 /** 快捷键配置：动作 ID -> 键组合字符串 */
 export type ShortcutsConfig = Record<ShortcutActionId, string>;
@@ -45,7 +41,10 @@ export function eventToKeys(e: KeyboardEvent): string {
   if (key) parts.push(key);
 
   // 如果只有修饰键（没有实际键），返回空
-  if (parts.length === 0 || (parts.length === 1 && ['Cmd', 'Ctrl', 'Alt', 'Shift'].includes(parts[0]))) {
+  if (
+    parts.length === 0 ||
+    (parts.length === 1 && ['Cmd', 'Ctrl', 'Alt', 'Shift'].includes(parts[0]))
+  ) {
     return '';
   }
 

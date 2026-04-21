@@ -23,9 +23,10 @@ export const CODE_THEMES: CodeThemeConfig[] = [
   { id: 'tokyo-night-dark', name: 'Tokyo Night', style: 'dark', css: tokyoNightDark },
 ];
 
-export const CODE_THEME_MAP = Object.fromEntries(
-  CODE_THEMES.map((t) => [t.id, t]),
-) as Record<CodeTheme, CodeThemeConfig>;
+export const CODE_THEME_MAP = Object.fromEntries(CODE_THEMES.map((t) => [t.id, t])) as Record<
+  CodeTheme,
+  CodeThemeConfig
+>;
 
 /** 根据应用主题返回默认代码主题 */
 export function getDefaultCodeTheme(appTheme: 'light' | 'dark'): CodeTheme {

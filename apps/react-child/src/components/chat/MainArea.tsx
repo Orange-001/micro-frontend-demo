@@ -14,8 +14,14 @@ export function MainArea() {
   const activeConversation = activeId ? conversations[activeId] : null;
   const hasMessages = activeConversation && activeConversation.messages.length > 0;
 
-  const { shouldSuggestCompaction, estimatedTokens, compactionState, compact, dismiss, resetState } =
-    useCompaction();
+  const {
+    shouldSuggestCompaction,
+    estimatedTokens,
+    compactionState,
+    compact,
+    dismiss,
+    resetState,
+  } = useCompaction();
 
   const showCompactionBar = shouldSuggestCompaction || compactionState !== 'idle';
 

@@ -34,7 +34,9 @@ export function ChatView() {
     }>();
     if (savedUI) dispatch(uiActions.loadFromStorage(savedUI));
 
-    const savedConfig = storageService.loadConfig<Partial<APIConfig> & { shortcuts?: ShortcutsConfig }>();
+    const savedConfig = storageService.loadConfig<
+      Partial<APIConfig> & { shortcuts?: ShortcutsConfig }
+    >();
     if (savedConfig) dispatch(configActions.loadFromStorage(savedConfig));
 
     const savedMemory = storageService.loadMemory<{

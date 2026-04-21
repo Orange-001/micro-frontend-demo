@@ -41,7 +41,9 @@ export const Wrapper = styled.div<{ $collapsed: boolean; $theme: string }>`
     background: transparent;
   }
 
-  transition: background 0.3s, color 0.3s;
+  transition:
+    background 0.3s,
+    color 0.3s;
 
   @media (max-width: 768px) {
     --sidebar-width: 0px;

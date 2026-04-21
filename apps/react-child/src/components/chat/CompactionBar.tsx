@@ -1,5 +1,10 @@
 import { Button, Space } from 'antd';
-import { CompressOutlined, CloseOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
+import {
+  CompressOutlined,
+  CloseOutlined,
+  CheckCircleOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
 import { formatTokenCount } from '../../utils/tokenEstimation';
 import type { CompactionState } from '../../hooks/useCompaction';
 import styled from 'styled-components';
@@ -26,7 +31,10 @@ const StatusWrapper = styled.div`
   align-items: center;
 `;
 
-const STATUS_CONFIG: Record<Exclude<CompactionState, 'idle'>, { text: string; icon: typeof CheckCircleOutlined; color: string }> = {
+const STATUS_CONFIG: Record<
+  Exclude<CompactionState, 'idle'>,
+  { text: string; icon: typeof CheckCircleOutlined; color: string }
+> = {
   compacting: {
     text: '压缩中，请稍候...',
     icon: CompressOutlined as any,
@@ -52,26 +60,22 @@ interface Props {
   onResetState: () => void;
 }
 
-export function CompactionBar({ tokens, compactionState, onCompact, onDismiss, onResetState }: Props) {
+export function CompactionBar({
+  tokens,
+  compactionState,
+  onCompact,
+  onDismiss,
+  onResetState,
+}: Props) {
   if (compactionState === 'idle') {
     return (
       <Bar>
         <span>对话较长 (~{formatTokenCount(tokens)} tokens)</span>
         <Space size={4}>
-          <Button
-            size="small"
-            type="primary"
-            icon={<CompressOutlined />}
-            onClick={onCompact}
-          >
+          <Button size="small" type="primary" icon={<CompressOutlined />} onClick={onCompact}>
             压缩上下文
           </Button>
-          <Button
-            size="small"
-            type="text"
-            icon={<CloseOutlined />}
-            onClick={onDismiss}
-          />
+          <Button size="small" type="text" icon={<CloseOutlined />} onClick={onDismiss} />
         </Space>
       </Bar>
     );
@@ -101,12 +105,7 @@ export function CompactionBar({ tokens, compactionState, onCompact, onDismiss, o
           >
             重试
           </Button>
-          <Button
-            size="small"
-            type="text"
-            icon={<CloseOutlined />}
-            onClick={onDismiss}
-          />
+          <Button size="small" type="text" icon={<CloseOutlined />} onClick={onDismiss} />
         </Space>
       )}
     </Bar>

@@ -128,13 +128,28 @@ const RESPONSE_KEYS = Object.keys(RESPONSES);
  */
 export function getMatchedResponse(input: string, webSearch?: boolean): string {
   const lower = input.toLowerCase();
-  if (lower.includes('代码') || lower.includes('code') || lower.includes('hook') || lower.includes('函数')) {
+  if (
+    lower.includes('代码') ||
+    lower.includes('code') ||
+    lower.includes('hook') ||
+    lower.includes('函数')
+  ) {
     return RESPONSES.code;
   }
-  if (lower.includes('数学') || lower.includes('公式') || lower.includes('math') || lower.includes('欧拉')) {
+  if (
+    lower.includes('数学') ||
+    lower.includes('公式') ||
+    lower.includes('math') ||
+    lower.includes('欧拉')
+  ) {
     return RESPONSES.math;
   }
-  if (lower.includes('对比') || lower.includes('比较') || lower.includes('表格') || lower.includes('框架')) {
+  if (
+    lower.includes('对比') ||
+    lower.includes('比较') ||
+    lower.includes('表格') ||
+    lower.includes('框架')
+  ) {
     return RESPONSES.table;
   }
   if (lower.includes('最佳实践') || lower.includes('优化') || lower.includes('列表')) {

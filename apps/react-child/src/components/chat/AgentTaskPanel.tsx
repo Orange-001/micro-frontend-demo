@@ -7,7 +7,7 @@
  * - 类似 ChatGPT 的"搜索中..."多步骤展示
  */
 
-import { Steps, Tag } from 'antd';
+import { Steps } from 'antd';
 import {
   LoadingOutlined,
   CheckCircleOutlined,
@@ -54,10 +54,14 @@ export function AgentTaskPanel({ steps }: Props) {
     title: step.label,
     description: step.detail || '',
     icon: statusIconMap[step.status],
-    status: step.status === 'done' ? 'finish' as const
-      : step.status === 'running' ? 'process' as const
-      : step.status === 'error' ? 'error' as const
-      : 'wait' as const,
+    status:
+      step.status === 'done'
+        ? ('finish' as const)
+        : step.status === 'running'
+          ? ('process' as const)
+          : step.status === 'error'
+            ? ('error' as const)
+            : ('wait' as const),
   }));
 
   return (

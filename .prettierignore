@@ -4,3 +4,13 @@ build
 .turbo
 .cache
 
+# Markdown files
+*.md
+
+# Lock files
+pnpm-lock.yaml
+
+# Third-party generated iconfont files
+**/iconfont.js
+**/iconfont.css
+

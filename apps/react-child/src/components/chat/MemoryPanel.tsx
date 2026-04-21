@@ -102,12 +102,14 @@ export function MemoryPanel({ open, onClose }: Props) {
                 editingId === item.id
                   ? [
                       <Button
+                        key="save"
                         type="text"
                         size="small"
                         icon={<CheckOutlined />}
                         onClick={handleSaveEdit}
                       />,
                       <Button
+                        key="cancel"
                         type="text"
                         size="small"
                         icon={<CloseOutlined />}
@@ -116,17 +118,20 @@ export function MemoryPanel({ open, onClose }: Props) {
                     ]
                   : [
                       <Switch
+                        key="toggle"
                         size="small"
                         checked={item.enabled}
                         onChange={() => dispatch(memoryActions.toggleItem(item.id))}
                       />,
                       <Button
+                        key="edit"
                         type="text"
                         size="small"
                         icon={<EditOutlined />}
                         onClick={() => handleStartEdit(item.id, item.content)}
                       />,
                       <Popconfirm
+                        key="delete"
                         title="删除此条目？"
                         onConfirm={() => dispatch(memoryActions.deleteItem(item.id))}
                         okText="删除"

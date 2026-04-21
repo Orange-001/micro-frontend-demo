@@ -19,7 +19,7 @@ export async function searchWeb(query: string, baseUrl: string): Promise<SearchR
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: { 'Accept': 'application/json' },
+    headers: { Accept: 'application/json' },
   });
 
   if (!response.ok) {
@@ -46,8 +46,8 @@ export async function searchWeb(query: string, baseUrl: string): Promise<SearchR
 export function formatSearchContext(results: SearchResult[]): string {
   if (results.length === 0) return '';
 
-  const sections = results.map((r, i) =>
-    `[${i + 1}] ${r.title}\n    URL: ${r.url}\n    ${r.content}`,
+  const sections = results.map(
+    (r, i) => `[${i + 1}] ${r.title}\n    URL: ${r.url}\n    ${r.content}`,
   );
 
   return `以下是联网搜索获取到的参考信息：\n\n${sections.join('\n\n')}\n\n请基于以上搜索结果回答用户的问题，并在回答中标注引用来源。`;

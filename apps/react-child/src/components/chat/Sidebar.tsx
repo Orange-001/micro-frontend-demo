@@ -29,7 +29,7 @@ export function Sidebar() {
   const selectedModel = useSelector((s: RootState) => s.ui.selectedModel);
 
   // INTERVIEW: 二面4 - useTransition 标记过滤为低优先级
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
 
   const handleSearch = useCallback(
     (value: string) => {
@@ -84,9 +84,7 @@ export function Sidebar() {
 
   return (
     <>
-      {!collapsed && (
-        <SidebarOverlay onClick={() => dispatch(uiActions.toggleSidebar())} />
-      )}
+      {!collapsed && <SidebarOverlay onClick={() => dispatch(uiActions.toggleSidebar())} />}
       <Wrapper $collapsed={collapsed}>
         <SidebarHeader
           onNewChat={handleNewChat}

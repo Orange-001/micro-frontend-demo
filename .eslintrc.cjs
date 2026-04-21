@@ -5,7 +5,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
-    sourceType: 'module'
+    sourceType: 'module',
   },
   plugins: ['@typescript-eslint', 'react', 'react-hooks', 'vue', 'prettier'],
   extends: [
@@ -13,9 +13,9 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
     'plugin:@typescript-eslint/recommended',
-    'prettier'
+    'prettier',
   ],
-  ignorePatterns: ['dist/', 'node_modules/'],
+  ignorePatterns: ['dist/', 'node_modules/', '**/assets/iconfont/iconfont.js'],
   settings: {
     react: { version: '18' },
   },
@@ -33,7 +33,7 @@ module.exports = {
       files: ['*.vue'],
       parser: 'vue-eslint-parser',
       parserOptions: {
-        parser: '@typescript-eslint/parser'
+        parser: '@typescript-eslint/parser',
       },
       extends: ['plugin:vue/vue3-recommended'],
       rules: {
@@ -45,8 +45,7 @@ module.exports = {
         'vue/html-indent': 'off',
         'vue/first-attribute-linebreak': 'off',
         'vue/html-self-closing': 'off',
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
-

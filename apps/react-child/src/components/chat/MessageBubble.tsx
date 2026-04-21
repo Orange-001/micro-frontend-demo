@@ -86,9 +86,7 @@ export const MessageBubble = memo(function MessageBubble({ message, conversation
 
   return (
     <BubbleWrapper $role={message.role}>
-      <AvatarWrapper $role={message.role}>
-        {isUser ? '👤' : '✨'}
-      </AvatarWrapper>
+      <AvatarWrapper $role={message.role}>{isUser ? '👤' : '✨'}</AvatarWrapper>
       <ContentWrapper $role={message.role}>
         {isUser ? (
           <>

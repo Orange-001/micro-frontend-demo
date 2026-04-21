@@ -23,34 +23,28 @@ export function compileTemplate(template: string): (data: TemplateData) => strin
     let result = template;
 
     // 1. 处理 {{#each array}}...{{/each}} 循环
-    result = result.replace(
-      /\{\{#each\s+(\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g,
-      (_, key, body) => {
-        const arr = data[key];
-        if (!Array.isArray(arr)) return '';
-        return arr
-          .map((item) => {
-            let line = body;
-            if (typeof item === 'object' && item !== null) {
-              Object.entries(item).forEach(([k, v]) => {
-                line = line.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
-              });
-            } else {
-              line = line.replace(/\{\{this\}\}/g, String(item));
-            }
-            return line;
-          })
-          .join('');
-      },
-    );
+    result = result.replace(/\{\{#each\s+(\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (_, key, body) => {
+      const arr = data[key];
+      if (!Array.isArray(arr)) return '';
+      return arr
+        .map((item) => {
+          let line = body;
+          if (typeof item === 'object' && item !== null) {
+            Object.entries(item).forEach(([k, v]) => {
+              line = line.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
+            });
+          } else {
+            line = line.replace(/\{\{this\}\}/g, String(item));
+          }
+          return line;
+        })
+        .join('');
+    });
 
     // 2. 处理 {{#if condition}}...{{/if}} 条件
-    result = result.replace(
-      /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
-      (_, key, body) => {
-        return data[key] ? body : '';
-      },
-    );
+    result = result.replace(/\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (_, key, body) => {
+      return data[key] ? body : '';
+    });
 
     // 3. 处理 {{variable}} 变量替换
     result = result.replace(/\{\{(\w+)\}\}/g, (_, key) => {

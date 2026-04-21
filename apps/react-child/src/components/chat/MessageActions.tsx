@@ -57,7 +57,13 @@ export function MessageActions({ message: msg, conversationId }: Props) {
             <Button
               type="text"
               size="small"
-              icon={msg.reaction === 'like' ? <LikeFilled style={{ color: 'var(--accent-color)' }} /> : <LikeOutlined />}
+              icon={
+                msg.reaction === 'like' ? (
+                  <LikeFilled style={{ color: 'var(--accent-color)' }} />
+                ) : (
+                  <LikeOutlined />
+                )
+              }
               onClick={() => handleReaction('like')}
             />
           </Tooltip>
@@ -65,7 +71,13 @@ export function MessageActions({ message: msg, conversationId }: Props) {
             <Button
               type="text"
               size="small"
-              icon={msg.reaction === 'dislike' ? <DislikeFilled style={{ color: '#ff4d4f' }} /> : <DislikeOutlined />}
+              icon={
+                msg.reaction === 'dislike' ? (
+                  <DislikeFilled style={{ color: '#ff4d4f' }} />
+                ) : (
+                  <DislikeOutlined />
+                )
+              }
               onClick={() => handleReaction('dislike')}
             />
           </Tooltip>

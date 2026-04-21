@@ -22,9 +22,7 @@ export function getCompactionCandidates(
  * 构建压缩提示词 — 发给 AI 生成摘要
  */
 export function buildCompactionPrompt(messagesToCompact: Message[]): Message[] {
-  const conversationText = messagesToCompact
-    .map((m) => `${m.role}: ${m.content}`)
-    .join('\n\n');
+  const conversationText = messagesToCompact.map((m) => `${m.role}: ${m.content}`).join('\n\n');
 
   return [
     {
