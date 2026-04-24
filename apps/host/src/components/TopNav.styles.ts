@@ -1,25 +1,27 @@
 import styled from 'styled-components';
 
 export const Wrapper = styled.div`
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 16px;
+  background: var(--mfe-bg-card);
+  border: 1px solid var(--mfe-border-subtle);
+  border-radius: var(--mfe-radius-lg);
+  padding: var(--mfe-space-lg);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--mfe-space-md);
 
   .brand {
     font-weight: 700;
+    color: var(--mfe-text-strong);
   }
 
   .nav-links {
     display: flex;
-    gap: 12px;
+    gap: var(--mfe-space-md);
+    flex-wrap: wrap;
   }
 
   .nav-link {
-    color: #fff;
+    color: var(--mfe-text-primary);
     opacity: 0.85;
     text-decoration: none;
 
@@ -28,6 +30,7 @@ export const Wrapper = styled.div`
     }
 
     &.active {
+      color: var(--mfe-color-primary);
       opacity: 1;
     }
   }

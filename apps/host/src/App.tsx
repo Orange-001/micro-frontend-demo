@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, message } from 'antd';
 import { Routes, Route } from 'react-router-dom';
+import { MICRO_APP_CONTAINER_ID } from '@mfe/shared';
 import { TopNav } from './components/TopNav';
 import { Home } from './pages/Home';
 import { VueRoute } from './pages/VueRoute';
@@ -23,15 +24,15 @@ export function App() {
   return (
     <>
       {contextHolder}
-      <Wrapper $highlight={value >= 10}>
+      <Wrapper className="mfe-shell" $highlight={value >= 10}>
         <TopNav />
-        <div className="spacer" />
+        <div className="mfe-shell__spacer" />
 
-        <div className="grid">
-          <div className="card">
-            <h3 className="card-title">Host Redux 示例</h3>
-            <div className="counter-row">
-              <div className="counter-value">count: {value}</div>
+        <main className="mfe-shell__grid">
+          <section className="mfe-card mfe-host-card">
+            <h3 className="mfe-card__title">Host Redux 示例</h3>
+            <div className="mfe-counter-row">
+              <div className="mfe-counter-value">count: {value}</div>
               <Button
                 type="primary"
                 onClick={() => {
@@ -50,18 +51,22 @@ export function App() {
                 style={{ fontSize: 18 }}
               />
             </div>
-          </div>
+          </section>
 
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/vue" element={<VueRoute />} />
-            <Route path="/react" element={<ReactRoute />} />
+            <Route path="/vue/*" element={<VueRoute />} />
+            <Route path="/react/*" element={<ReactRoute />} />
           </Routes>
 
-          <div className="micro-viewport" id="micro-viewport">
-            <div className="placeholder">子应用区域：等待 qiankun 挂载</div>
-          </div>
-        </div>
+          <section
+            className="mfe-viewport"
+            id={MICRO_APP_CONTAINER_ID}
+            aria-label="微前端子应用区域"
+          >
+            <div className="mfe-viewport__placeholder">子应用区域：等待 qiankun 挂载</div>
+          </section>
+        </main>
       </Wrapper>
     </>
   );

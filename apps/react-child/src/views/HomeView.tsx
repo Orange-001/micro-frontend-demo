@@ -5,7 +5,7 @@ export function HomeView() {
     <Wrapper>
       <h2>首页</h2>
       <p className="text">
-        这是 React 子应用。为了减少与容器前缀冲突，这里使用 <code>HashRouter</code>。
+        这是 React 子应用。基于 host 下发的 basename 运行，支持更清晰的深链路径。
       </p>
     </Wrapper>
   );

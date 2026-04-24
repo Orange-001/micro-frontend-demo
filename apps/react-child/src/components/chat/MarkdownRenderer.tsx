@@ -20,7 +20,6 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
 import { CodeBlock } from './CodeBlock';
 import { MermaidBlock } from './MermaidBlock';
@@ -28,7 +27,7 @@ import { AgentTaskPanel } from './AgentTaskPanel';
 
 // rehype/remark 插件数组保持引用稳定
 const remarkPlugins = [remarkGfm, remarkMath];
-const rehypePlugins = [rehypeRaw, rehypeHighlight, rehypeKatex];
+const rehypePlugins = [rehypeHighlight, rehypeKatex];
 
 interface Props {
   content: string;

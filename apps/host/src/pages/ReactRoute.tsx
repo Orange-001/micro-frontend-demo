@@ -4,9 +4,7 @@ export function ReactRoute() {
   return (
     <Wrapper>
       <h3 className="title">React 子应用区域</h3>
-      <p className="text">
-        子应用内容将挂载到下方容器。为了避免前缀冲突，这里子应用使用 hash 路由。
-      </p>
+      <p className="text">子应用基于 host 下发的 basename 运行，样式限制在自己的根容器内。</p>
     </Wrapper>
   );
 }

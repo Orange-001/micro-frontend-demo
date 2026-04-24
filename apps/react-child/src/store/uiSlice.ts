@@ -17,7 +17,7 @@ const savedUI = storageService.loadUI<Partial<UIState>>();
 
 const initialState: UIState = {
   sidebarCollapsed: savedUI?.sidebarCollapsed ?? false,
-  theme: savedUI?.theme ?? 'light',
+  theme: savedUI?.theme ?? 'dark',
   codeTheme: savedUI?.codeTheme ?? 'github-dark',
   selectedModel: savedUI?.selectedModel ?? '',
   searchQuery: '',

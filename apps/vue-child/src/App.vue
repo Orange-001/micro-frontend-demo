@@ -31,7 +31,6 @@ import { ElMessage } from 'element-plus';
 import { useCounterStore } from './stores/counter';
 
 const counter = useCounterStore();
-
 const mountContainer = inject<HTMLElement>('mfeMountContainer');
 
 const addWithMessage = () => {

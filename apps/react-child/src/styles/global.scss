@@ -1,1 +1,14 @@
-/* global reset only — component styles migrated to styled-components */
+@import '@mfe/shared/tokens.css';
+
+.mfe-app-react-child,
+.mfe-app-react-child *,
+.mfe-app-react-child *::before,
+.mfe-app-react-child *::after {
+  box-sizing: border-box;
+}
+
+.mfe-app-react-child {
+  min-height: 100%;
+  color: var(--mfe-text-primary);
+  font-family: var(--mfe-font-family);
+}

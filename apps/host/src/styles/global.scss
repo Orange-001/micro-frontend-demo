@@ -1,30 +1,25 @@
-$bg: #0b1020;
-$text: rgba(255, 255, 255, 0.92);
+@import '@mfe/shared/tokens.css';
 
 html,
-body {
-  height: 100%;
+body,
+#root {
+  min-height: 100%;
 }
 
 body {
   margin: 0;
   background:
     radial-gradient(1200px 600px at 10% 0%, rgba(110, 231, 183, 0.2), transparent),
-    radial-gradient(900px 500px at 90% 10%, rgba(59, 130, 246, 0.25), transparent), $bg;
+    radial-gradient(900px 500px at 90% 10%, rgba(59, 130, 246, 0.25), transparent),
+    var(--mfe-bg-page);
   background-repeat: no-repeat;
-  color: $text;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial,
-    'Apple Color Emoji',
-    'Segoe UI Emoji';
+  color: var(--mfe-text-primary);
+  font-family: var(--mfe-font-family);
 }
 
-* {
+.mfe-shell,
+.mfe-shell *,
+.mfe-shell *::before,
+.mfe-shell *::after {
   box-sizing: border-box;
 }

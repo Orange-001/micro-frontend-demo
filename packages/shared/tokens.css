@@ -1,0 +1,25 @@
+:root {
+  --mfe-font-family:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --mfe-bg-page: #0b1020;
+  --mfe-bg-card: rgba(255, 255, 255, 0.06);
+  --mfe-bg-card-strong: rgba(255, 255, 255, 0.1);
+  --mfe-border-subtle: rgba(255, 255, 255, 0.12);
+  --mfe-border-strong: rgba(255, 255, 255, 0.18);
+  --mfe-text-primary: rgba(255, 255, 255, 0.92);
+  --mfe-text-secondary: rgba(255, 255, 255, 0.78);
+  --mfe-text-strong: rgba(255, 255, 255, 0.96);
+  --mfe-color-primary: #6ee7b7;
+  --mfe-color-host-primary: #1677ff;
+  --mfe-color-react-primary: #10a37f;
+  --mfe-color-danger: #f5222d;
+  --mfe-radius-md: 10px;
+  --mfe-radius-lg: 12px;
+  --mfe-space-xs: 4px;
+  --mfe-space-sm: 8px;
+  --mfe-space-md: 12px;
+  --mfe-space-lg: 16px;
+  --mfe-shadow-card: 0 10px 30px rgba(0, 0, 0, 0.18);
+  --mfe-z-popup: 1000;
+}
