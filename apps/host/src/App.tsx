@@ -65,18 +65,14 @@ export function App() {
             <Route path="/react/*" element={<ReactRoute />} />
           </Routes>
 
-          <section
-            className="mfe-viewport"
-            id={MICRO_APP_CONTAINER_ID}
-            aria-label="微前端子应用区域"
-          >
+          <section className="mfe-viewport" aria-label="微前端子应用区域">
             {loadingApp && (
               <div className="mfe-viewport__loading" role="status" aria-live="polite">
                 <span className="mfe-viewport__spinner" />
                 <span>正在加载 {loadingApp} 子应用...</span>
               </div>
             )}
-            <div className="mfe-viewport__placeholder">子应用区域：等待 qiankun 挂载</div>
+            <div id={MICRO_APP_CONTAINER_ID} className="mfe-viewport__mount" />
           </section>
         </main>
       </Wrapper>

@@ -54,9 +54,8 @@ export const Wrapper = styled.div<WrapperProps>`
     border-radius: 0;
   }
 
-  .mfe-viewport__placeholder {
-    padding: var(--mfe-space-lg);
-    opacity: 0.7;
+  .mfe-viewport__mount {
+    min-height: inherit;
   }
 
   .mfe-viewport__loading {

@@ -68,6 +68,6 @@ export function startQiankun() {
     sandbox: {
       experimentalStyleIsolation: true,
     },
-    prefetch: 'all',
+    prefetch: import.meta.env.DEV ? false : 'all',
   });
 }
