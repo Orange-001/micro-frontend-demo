@@ -17,6 +17,11 @@ import elementPlusCss from 'element-plus/dist/index.css?inline';
 
 type VueRuntimeProps = Partial<MicroAppRuntimeProps>;
 
+function normalizeBase(base: string) {
+  const normalized = base.replace(/\/$/, '');
+  return normalized === '' ? '/' : normalized;
+}
+
 let elementPlusStyleEl: HTMLStyleElement | null = null;
 let vcFontStyleEl: HTMLStyleElement | null = null;
 let app: ReturnType<typeof createApp> | null = null;
@@ -55,7 +60,13 @@ function render(props: VueRuntimeProps = {}) {
 
   app = createApp(App);
   app.use(createPinia());
-  app.use(createAppRouter(qiankunWindow.__POWERED_BY_QIANKUN__ ? props.basename || '/vue' : '/'));
+  app.use(
+    createAppRouter(
+      qiankunWindow.__POWERED_BY_QIANKUN__
+        ? props.basename || '/vue'
+        : normalizeBase(import.meta.env.BASE_URL),
+    ),
+  );
   app.provide('mfeMountContainer', mountRoot);
   app.use(ElementPlus);
   app.mount(mountRoot);
@@ -80,5 +91,5 @@ renderWithQiankun({
 });
 
 if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
-  render({ basename: '/' });
+  render({ basename: normalizeBase(import.meta.env.BASE_URL) });
 }

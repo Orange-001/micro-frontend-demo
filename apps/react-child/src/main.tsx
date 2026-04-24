@@ -16,6 +16,11 @@ const rcTtfUrl = new URL('./assets/iconfont/iconfont.ttf', import.meta.url).href
 
 type ReactRuntimeProps = Partial<MicroAppRuntimeProps>;
 
+function normalizeBase(base: string) {
+  const normalized = base.replace(/\/$/, '');
+  return normalized === '' ? '/' : normalized;
+}
+
 let root: Root | null = null;
 let rcFontStyleEl: HTMLStyleElement | null = null;
 let mountRoot: HTMLElement | null = null;
@@ -53,7 +58,13 @@ function render(props: ReactRuntimeProps = {}) {
   root.render(
     <Provider store={store}>
       <AntProvider microContainer={mountRoot}>
-        <App basename={qiankunWindow.__POWERED_BY_QIANKUN__ ? props.basename || '/react' : '/'} />
+        <App
+          basename={
+            qiankunWindow.__POWERED_BY_QIANKUN__
+              ? props.basename || '/react'
+              : normalizeBase(import.meta.env.BASE_URL)
+          }
+        />
       </AntProvider>
     </Provider>,
   );
@@ -76,5 +87,5 @@ renderWithQiankun({
 });
 
 if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
-  render({ basename: '/' });
+  render({ basename: normalizeBase(import.meta.env.BASE_URL) });
 }
