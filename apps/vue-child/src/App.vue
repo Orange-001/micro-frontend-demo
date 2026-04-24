@@ -1,25 +1,25 @@
 <template>
-  <div class="page p-4">
-    <div class="card head">
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12">
-        <div style="font-weight: 700">Vue 子应用（Pinia + Vue Router）</div>
-        <div style="display: flex; align-items: center; gap: 10px">
+  <div class="vc-page">
+    <div class="vc-card vc-head">
+      <div class="vc-head-row">
+        <div class="vc-brand">Vue 子应用（Pinia + Vue Router）</div>
+        <div class="vc-nav-links">
           <i class="vc-iconfont vc-icon-bangqiu" aria-hidden="true" style="font-size: 18px" />
-          <router-link to="/" class="link"> 首页 </router-link>
-          <router-link to="/about" class="link"> 关于 </router-link>
+          <router-link to="/" class="vc-link"> 首页 </router-link>
+          <router-link to="/about" class="vc-link"> 关于 </router-link>
         </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top: 12px">
-      <h3 style="margin-top: 0">Pinia 示例</h3>
-      <div style="display: flex; align-items: center; gap: 12">
-        <div style="fontsize: 18px">count: {{ counter.count }}</div>
+    <div class="vc-card vc-counter-card">
+      <h3 class="vc-card-title">Pinia 示例</h3>
+      <div class="vc-counter-row">
+        <div class="vc-counter-value">count: {{ counter.count }}</div>
         <el-button type="primary" @click="addWithMessage"> +1 </el-button>
       </div>
     </div>
 
-    <div class="content">
+    <div class="vc-content">
       <router-view />
     </div>
   </div>
