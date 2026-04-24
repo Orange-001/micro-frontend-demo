@@ -12,3 +12,9 @@
   color: var(--mfe-text-primary);
   font-family: var(--mfe-font-family);
 }
+
+.mfe-app-loading,
+.markdown-loading {
+  padding: 24px;
+  color: var(--mfe-text-secondary);
+}

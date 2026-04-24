@@ -12,8 +12,10 @@ import './styles/global.scss';
 const vcWoff2Url = new URL('./assets/iconfont/iconfont.woff2', import.meta.url).href;
 const vcWoffUrl = new URL('./assets/iconfont/iconfont.woff', import.meta.url).href;
 const vcTtfUrl = new URL('./assets/iconfont/iconfont.ttf', import.meta.url).href;
-import ElementPlus from 'element-plus';
-import elementPlusCss from 'element-plus/dist/index.css?inline';
+import { ElButton } from 'element-plus/es/components/button/index';
+import elementPlusBaseCss from 'element-plus/theme-chalk/base.css?inline';
+import elementPlusButtonCss from 'element-plus/theme-chalk/el-button.css?inline';
+import elementPlusMessageCss from 'element-plus/theme-chalk/el-message.css?inline';
 
 type VueRuntimeProps = Partial<MicroAppRuntimeProps>;
 
@@ -56,7 +58,10 @@ function render(props: VueRuntimeProps = {}) {
 }`,
   );
 
-  elementPlusStyleEl = injectGlobalStyle('vue-child-element-plus', elementPlusCss as string);
+  elementPlusStyleEl = injectGlobalStyle(
+    'vue-child-element-plus',
+    `${elementPlusBaseCss}\n${elementPlusButtonCss}\n${elementPlusMessageCss}`,
+  );
 
   app = createApp(App);
   app.use(createPinia());
@@ -68,7 +73,7 @@ function render(props: VueRuntimeProps = {}) {
     ),
   );
   app.provide('mfeMountContainer', mountRoot);
-  app.use(ElementPlus);
+  app.use(ElButton);
   app.mount(mountRoot);
 }
 

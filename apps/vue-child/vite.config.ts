@@ -17,5 +17,16 @@ export default defineConfig({
     strictPort: true,
     port: 3001,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('element-plus')) return 'vendor-element-plus';
+          if (id.includes('vue') || id.includes('pinia')) return 'vendor-vue';
+        },
+      },
+    },
+  },
   base: process.env.VITE_APP_BASE || '/',
 });

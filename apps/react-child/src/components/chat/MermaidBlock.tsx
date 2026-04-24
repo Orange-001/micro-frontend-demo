@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
-import mermaid from 'mermaid';
 import {
   CopyOutlined,
   CheckOutlined,
@@ -9,11 +8,19 @@ import {
 } from '@ant-design/icons';
 import styled from 'styled-components';
 
+type MermaidApi = typeof import('mermaid').default;
+
+let mermaidInstance: MermaidApi | null = null;
 let mermaidInitialized = false;
 
-function initMermaid() {
-  if (mermaidInitialized) return;
-  mermaid.initialize({
+async function getMermaid() {
+  if (!mermaidInstance) {
+    mermaidInstance = (await import('mermaid')).default;
+  }
+
+  if (mermaidInitialized) return mermaidInstance;
+
+  mermaidInstance.initialize({
     startOnLoad: false,
     theme: 'default',
     // strict 会强制 htmlLabels:false，用 SVG <text> 测量宽度，中文/混合文本会被截断
@@ -21,6 +28,8 @@ function initMermaid() {
     securityLevel: 'loose',
   });
   mermaidInitialized = true;
+
+  return mermaidInstance;
 }
 
 let idCounter = 0;
@@ -195,12 +204,11 @@ export const MermaidBlock = memo(function MermaidBlock({ chart }: Props) {
   // ---- render mermaid ----
   useEffect(() => {
     if (!chart.trim()) return;
-    initMermaid();
     const id = `mermaid-${++idCounter}`;
     let cancelled = false;
 
-    mermaid
-      .render(id, preprocessChart(chart.trim()))
+    getMermaid()
+      .then((mermaid) => mermaid.render(id, preprocessChart(chart.trim())))
       .then(({ svg }) => {
         if (!cancelled) {
           setSvg(svg);

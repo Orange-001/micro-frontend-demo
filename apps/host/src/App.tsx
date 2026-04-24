@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, message } from 'antd';
 import { Routes, Route } from 'react-router-dom';
@@ -9,16 +9,22 @@ import { VueRoute } from './pages/VueRoute';
 import { ReactRoute } from './pages/ReactRoute';
 import { RootState } from './store';
 import { increment } from './store/counterSlice';
-import { startQiankun } from './micro-apps';
+import { startQiankun, subscribeMicroAppLoading } from './micro-apps';
 import { Wrapper } from './App.styles';
 
 export function App() {
   const dispatch = useDispatch();
   const value = useSelector((s: RootState) => s.counter.value);
   const [messageApi, contextHolder] = message.useMessage();
+  const [loadingApp, setLoadingApp] = useState('');
 
   useEffect(() => {
+    const unsubscribe = subscribeMicroAppLoading(({ name, loading }) => {
+      setLoadingApp(loading ? name : '');
+    });
     startQiankun();
+
+    return unsubscribe;
   }, []);
 
   return (
@@ -64,6 +70,12 @@ export function App() {
             id={MICRO_APP_CONTAINER_ID}
             aria-label="微前端子应用区域"
           >
+            {loadingApp && (
+              <div className="mfe-viewport__loading" role="status" aria-live="polite">
+                <span className="mfe-viewport__spinner" />
+                <span>正在加载 {loadingApp} 子应用...</span>
+              </div>
+            )}
             <div className="mfe-viewport__placeholder">子应用区域：等待 qiankun 挂载</div>
           </section>
         </main>

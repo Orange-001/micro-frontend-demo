@@ -422,7 +422,121 @@ Token 应由 shared 包统一维护，host 和子应用共同消费。
 8. 移除 Markdown raw HTML 渲染风险。
 9. 保留 qiankun `experimentalStyleIsolation`，但不把它作为唯一样式隔离手段。
 
-## 6. 后续建议
+## 6. 子应用首次加载慢、挂载区域长时间空白
+
+### 6.1 现象
+
+发布或 Docker 生产构建后，首次从 host 进入 Vue / React 子应用时，子应用挂载区域会长时间停留在空白或 placeholder 状态。尤其 React 子应用依赖较重时，用户会误以为子应用加载失败。
+
+### 6.2 原因判断
+
+1. **缺少加载态反馈**
+   - qiankun 加载子应用 entry、下载资源、执行脚本、mount 生命周期都需要时间。
+   - 原实现没有接入 qiankun `loader`，加载期间 host 只能显示静态 placeholder，体验上接近“空白”。
+
+2. **没有提前预加载子应用资源**
+   - qiankun `prefetch` 曾设置为 `false`。
+   - 用户点击 `/vue` 或 `/react` 后才开始请求子应用 HTML、JS、CSS 和字体资源，首次进入路径耗时更明显。
+
+3. **React 子应用首包过大**
+   - React 子应用包含 `react-markdown`、`remark`、`rehype`、`highlight.js`、`KaTeX`、`Mermaid`、Ant Design 等依赖。
+   - 如果这些依赖全部进入首包，浏览器需要先下载、解析、执行大量 JS，mount 时间会明显变长。
+
+4. **Vue 子应用组件库全量引入**
+   - Vue 子应用只使用了 `ElButton` 和 `ElMessage`，但之前通过 `app.use(ElementPlus)` 全量注册 Element Plus。
+   - Element Plus 全量包会放大子应用首次下载和执行成本。
+
+5. **路由页面缺少代码分割**
+   - React / Vue 子应用页面如果静态导入，首屏会加载所有页面代码。
+   - 对微前端来说，子应用 entry 越轻，越能缩短首次 mount 的等待时间。
+
+### 6.3 优秀方案
+
+1. **加载态必须由 host 兜底**
+   - host 应接入 qiankun `loader(loading)`，在子应用资源加载和生命周期执行期间展示明确 loading UI。
+   - loading UI 应放在子应用容器层，避免子应用尚未 mount 时无反馈。
+
+2. **合理启用预加载**
+   - 对常用子应用可使用 `prefetch: 'all'` 或自定义空闲预加载策略。
+   - 如果子应用很多，应按业务优先级或用户行为预测预加载，避免一次性抢占首屏带宽。
+
+3. **子应用 entry 保持轻量**
+   - 子应用入口只放运行必需代码：框架启动、路由壳、状态初始化、基础样式。
+   - 页面、复杂组件、富文本渲染器、图表库、编辑器等重模块应按需加载。
+
+4. **路由级懒加载**
+   - React 使用 `React.lazy + Suspense`。
+   - Vue Router 使用 `component: () => import(...)`。
+
+5. **重依赖按需加载**
+   - Mermaid 只在遇到 Mermaid 代码块时 `dynamic import('mermaid')`。
+   - Markdown / KaTeX / highlight 这类渲染链路应拆成独立 chunk。
+   - Element Plus 按组件导入，避免全量组件库进入子应用首包。
+
+6. **构建层做稳定分包**
+   - 使用 Vite / Rollup `manualChunks` 将 framework、组件库、Markdown、Mermaid 等拆成可缓存 chunk。
+   - 分包目标不是“文件越多越好”，而是让首入口更轻、重依赖可按需、公共依赖可长期缓存。
+
+### 6.4 本次落地整改
+
+1. **Host 加载态**
+   - `apps/host/src/micro-apps.ts`：新增 `mfe:micro-app-loading` 事件，接入 qiankun `loader`。
+   - `apps/host/src/App.tsx`：订阅加载事件，在微前端挂载区域展示 loading。
+   - `apps/host/src/App.styles.ts`：新增 loading 遮罩和 spinner 样式。
+
+2. **qiankun 预加载**
+   - `apps/host/src/micro-apps.ts`：将 `prefetch: false` 调整为 `prefetch: 'all'`。
+   - host 首屏稳定后，浏览器可提前拉取子应用资源，降低首次进入子路由的等待时间。
+
+3. **React 路由懒加载**
+   - `apps/react-child/src/App.tsx`：`ChatView`、`AboutView` 改为 `React.lazy`，并通过 `Suspense` 给页面级 fallback。
+
+4. **Vue 路由懒加载**
+   - `apps/vue-child/src/router/index.ts`：`HomeView`、`AboutView` 改为动态导入。
+
+5. **Markdown 渲染链路拆分**
+   - `apps/react-child/src/components/chat/MarkdownRenderer.tsx`：改为轻量懒加载壳。
+   - `apps/react-child/src/components/chat/MarkdownContent.tsx`：承载原 Markdown / remark / rehype / KaTeX / highlight 渲染实现。
+
+6. **Mermaid 按需加载**
+   - `apps/react-child/src/components/chat/MermaidBlock.tsx`：移除静态 `import mermaid from 'mermaid'`，改为渲染图表时动态 import。
+   - 只有消息内容真正包含 Mermaid 图表时才下载 Mermaid 大包。
+
+7. **Element Plus 按需加载**
+   - `apps/vue-child/src/main.ts`：只注册 `ElButton`。
+   - `apps/vue-child/src/App.vue`：`ElMessage` 改为组件子路径导入。
+   - Element Plus 样式只注入 base、button、message 相关 CSS。
+
+8. **Vite 分包**
+   - `apps/react-child/vite.config.ts`：拆分 `vendor-react`、`vendor-markdown`、`vendor-mermaid`。
+   - `apps/vue-child/vite.config.ts`：拆分 `vendor-vue`、`vendor-element-plus`。
+
+### 6.5 整改效果
+
+1. Vue 子应用 Element Plus 相关 chunk 从全量约 `1.24MB` 降到按需约 `77.85KB`。
+2. React 子应用入口 chunk 降到约 `55KB`，Markdown、Mermaid 等重依赖不再全部进入入口文件。
+3. Mermaid 仍是较大的独立 chunk，但已经变成按需加载，不影响没有 Mermaid 图表的首屏挂载。
+4. 子应用加载期间 host 会显示 loading，不再出现长时间无反馈的空白区域。
+5. GitHub Pages / Docker 构建均可复用同一套优化策略。
+
+### 6.6 后续可继续优化
+
+1. **监控加载耗时**
+   - 记录子应用 entry 下载、bootstrap、mount、首内容渲染耗时。
+
+2. **加载失败 fallback**
+   - 对子应用加载超时、资源 404、mount 异常提供错误页和重试按钮。
+
+3. **更细的预加载策略**
+   - 对首屏低优先级子应用可使用 `requestIdleCallback` 或基于 hover / viewport 的预加载。
+
+4. **Mermaid 进一步拆分或降级**
+   - 如果 Mermaid 使用频率低，可提供“点击渲染图表”模式，完全避免自动下载图表库。
+
+5. **Docker 构建缓存优化**
+   - 当前三个镜像分别执行依赖安装，后续可通过共享 base 镜像或多阶段缓存减少构建时间。
+
+## 7. 后续建议
 
 1. **引入运行时 manifest**
    - 当前 manifest 是编译期共享常量，后续可升级为远程 JSON manifest，支持动态切换 entry 和版本。

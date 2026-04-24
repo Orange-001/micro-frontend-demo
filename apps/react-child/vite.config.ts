@@ -17,5 +17,34 @@ export default defineConfig({
     strictPort: true,
     port: 3002,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('mermaid') || id.includes('cytoscape') || id.includes('dagre')) {
+            return 'vendor-mermaid';
+          }
+          if (
+            id.includes('katex') ||
+            id.includes('react-markdown') ||
+            id.includes('remark-') ||
+            id.includes('rehype-') ||
+            id.includes('highlight.js') ||
+            id.includes('unified') ||
+            id.includes('micromark') ||
+            id.includes('mdast') ||
+            id.includes('hast')
+          ) {
+            return 'vendor-markdown';
+          }
+          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            return 'vendor-react';
+          }
+          if (id.includes('antd') || id.includes('@ant-design')) return 'vendor-react';
+        },
+      },
+    },
+  },
   base: process.env.VITE_APP_BASE || '/',
 });

@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { inject } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus/es/components/message/index';
 import { useCounterStore } from './stores/counter';
 
 const counter = useCounterStore();

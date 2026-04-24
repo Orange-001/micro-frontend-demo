@@ -46,6 +46,7 @@ export const Wrapper = styled.div<WrapperProps>`
   }
 
   .mfe-viewport {
+    position: relative;
     min-height: 420px;
     overflow: hidden;
     background: transparent;
@@ -56,5 +57,34 @@ export const Wrapper = styled.div<WrapperProps>`
   .mfe-viewport__placeholder {
     padding: var(--mfe-space-lg);
     opacity: 0.7;
+  }
+
+  .mfe-viewport__loading {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--mfe-space-sm);
+    min-height: 180px;
+    color: var(--mfe-text-secondary);
+    background: color-mix(in srgb, var(--mfe-bg-page) 70%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
+  .mfe-viewport__spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--mfe-border-subtle);
+    border-top-color: var(--mfe-color-primary);
+    border-radius: 50%;
+    animation: mfe-spin 0.8s linear infinite;
+  }
+
+  @keyframes mfe-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 `;
