@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Tooltip } from 'antd';
 import {
@@ -36,8 +35,8 @@ export function ChatHeader() {
   const activeId = useSelector((s: RootState) => s.chat.activeConversationId);
   const conversations = useSelector((s: RootState) => s.chat.conversations);
   const selectedModel = useSelector((s: RootState) => s.ui.selectedModel);
+  const settingsOpen = useSelector((s: RootState) => s.ui.settingsDrawerOpen);
   const activeConv = activeId ? conversations[activeId] : null;
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <Header>
@@ -78,11 +77,14 @@ export function ChatHeader() {
         <Button
           type="text"
           icon={<SettingOutlined />}
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => dispatch(uiActions.setSettingsDrawerOpen(true))}
           size="small"
         />
       </Tooltip>
-      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => dispatch(uiActions.setSettingsDrawerOpen(false))}
+      />
     </Header>
   );
 }

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../../store';
 import { chatActions } from '../../store/chatSlice';
 import { useStreamingResponse } from '../../hooks/useStreamingResponse';
+import { useChatConfigGuard } from '../../hooks/useChatConfigGuard';
 import {
   Wrapper,
   Content,
@@ -22,17 +23,19 @@ const SUGGESTIONS = [
 export function WelcomeScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const { sendMessage } = useStreamingResponse();
+  const ensureChatConfigured = useChatConfigGuard();
   const selectedModel = useSelector((s: RootState) => s.ui.selectedModel);
   const activeId = useSelector((s: RootState) => s.chat.activeConversationId);
 
   const handleSuggestion = useCallback(
     (text: string) => {
+      if (!ensureChatConfigured()) return;
       if (!activeId) {
         dispatch(chatActions.createConversation({ model: selectedModel }));
       }
       setTimeout(() => sendMessage(text), 0);
     },
-    [activeId, dispatch, selectedModel, sendMessage],
+    [activeId, dispatch, ensureChatConfigured, selectedModel, sendMessage],
   );
 
   return (

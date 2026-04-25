@@ -14,6 +14,7 @@ import type { RootState, AppDispatch } from '../../store';
 import { chatActions } from '../../store/chatSlice';
 import { uiActions } from '../../store/uiSlice';
 import { useStreamingResponse } from '../../hooks/useStreamingResponse';
+import { useChatConfigGuard } from '../../hooks/useChatConfigGuard';
 import { useAutoResizeTextarea } from '../../hooks/useAutoResizeTextarea';
 import { processFile, validateFiles } from '../../services/fileUtils';
 import type { PendingFileAttachment } from '../../types/chat';
@@ -36,6 +37,7 @@ export function InputArea() {
   const [pendingFiles, setPendingFiles] = useState<PendingFileAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const { sendMessage, stopStreaming, isStreaming } = useStreamingResponse();
+  const ensureChatConfigured = useChatConfigGuard();
   const { textareaRef, resize } = useAutoResizeTextarea(6);
   const webSearchEnabled = useSelector((s: RootState) => s.ui.webSearchEnabled);
   const deepThinkingEnabled = useSelector((s: RootState) => s.ui.deepThinkingEnabled);
@@ -45,6 +47,7 @@ export function InputArea() {
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
     if ((!trimmed && pendingFiles.length === 0) || isStreaming) return;
+    if (!ensureChatConfigured()) return;
 
     // 如果没有活跃对话，先创建
     if (!activeId) {
@@ -58,7 +61,16 @@ export function InputArea() {
     setTimeout(() => {
       sendMessage(trimmed, filesToSend);
     }, 0);
-  }, [input, pendingFiles, isStreaming, activeId, dispatch, selectedModel, sendMessage]);
+  }, [
+    input,
+    pendingFiles,
+    isStreaming,
+    ensureChatConfigured,
+    activeId,
+    dispatch,
+    selectedModel,
+    sendMessage,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

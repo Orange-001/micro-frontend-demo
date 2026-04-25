@@ -20,6 +20,8 @@ export function ModelSelector() {
           value: m.id,
           label: m.name,
         }));
+  const isMissingApiConfig = !config.baseUrl.trim() || !config.apiKey.trim();
+  const placeholder = isMissingApiConfig ? '请先配置 API' : '请选择模型';
 
   const fetchModelsIfNeeded = useCallback(async () => {
     if (config.provider === 'custom' || !config.apiKey) return;
@@ -70,7 +72,7 @@ export function ModelSelector() {
         }}
         variant="borderless"
         style={{ minWidth: 160 }}
-        placeholder="输入模型 ID"
+        placeholder={isMissingApiConfig ? '请先配置 API' : '输入模型 ID'}
         maxCount={1}
       />
     );
@@ -82,10 +84,11 @@ export function ModelSelector() {
     <Select
       showSearch
       optionFilterProp="label"
-      value={selected}
+      value={selected || undefined}
       onChange={(val) => dispatch(uiActions.setSelectedModel(val))}
       variant="borderless"
       style={{ minWidth: 160 }}
+      placeholder={placeholder}
       options={modelOptions}
       loading={loading}
       suffixIcon={loading ? <LoadingOutlined spin /> : undefined}

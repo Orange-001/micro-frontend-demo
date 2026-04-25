@@ -5,6 +5,7 @@ import { getDefaultCodeTheme } from '../constants/codeThemes';
 
 interface UIState {
   sidebarCollapsed: boolean;
+  settingsDrawerOpen: boolean;
   theme: Theme;
   codeTheme: CodeTheme;
   selectedModel: string;
@@ -17,6 +18,7 @@ const savedUI = storageService.loadUI<Partial<UIState>>();
 
 const initialState: UIState = {
   sidebarCollapsed: savedUI?.sidebarCollapsed ?? false,
+  settingsDrawerOpen: false,
   theme: savedUI?.theme ?? 'dark',
   codeTheme: savedUI?.codeTheme ?? 'github-dark',
   selectedModel: savedUI?.selectedModel ?? '',
@@ -37,6 +39,9 @@ const uiSlice = createSlice({
     },
     setSidebarCollapsed(state, action: PayloadAction<boolean>) {
       state.sidebarCollapsed = action.payload;
+    },
+    setSettingsDrawerOpen(state, action: PayloadAction<boolean>) {
+      state.settingsDrawerOpen = action.payload;
     },
     setTheme(state, action: PayloadAction<Theme>) {
       state.theme = action.payload;

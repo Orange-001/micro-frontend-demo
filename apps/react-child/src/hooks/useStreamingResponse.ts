@@ -14,6 +14,7 @@ import { chatActions } from '../store/chatSlice';
 import { streamChat, createStreamAbortController } from '../services/streamingService';
 import { buildMemorySystemMessage } from '../utils/memoryBuilder';
 import type { Message, APIConfig, PendingFileAttachment } from '../types/chat';
+import { useChatConfigGuard } from './useChatConfigGuard';
 
 /**
  * INTERVIEW TOPIC: 二面2 - 流式渲染与浏览器重绘机制
@@ -43,11 +44,14 @@ export function useStreamingResponse() {
   const memory = useSelector((s: RootState) => s.memory);
   const deepThinkingEnabled = useSelector((s: RootState) => s.ui.deepThinkingEnabled);
   const webSearchEnabled = useSelector((s: RootState) => s.ui.webSearchEnabled);
+  const ensureChatConfigured = useChatConfigGuard();
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
     async (content: string, attachments?: PendingFileAttachment[]) => {
+      if (!ensureChatConfigured()) return;
+
       const conversationId = activeId;
 
       if (!conversationId) {
@@ -198,6 +202,7 @@ export function useStreamingResponse() {
       memory,
       deepThinkingEnabled,
       webSearchEnabled,
+      ensureChatConfigured,
     ],
   );
 
@@ -208,6 +213,8 @@ export function useStreamingResponse() {
    */
   const editAndResendMessage = useCallback(
     async (conversationId: string, messageId: string, newContent: string) => {
+      if (!ensureChatConfigured()) return;
+
       // 1. 更新消息并截断后续内容
       dispatch(chatActions.editUserMessage({ conversationId, messageId, content: newContent }));
 
@@ -307,7 +314,16 @@ export function useStreamingResponse() {
         abortControllerRef.current = null;
       }
     },
-    [conversations, dispatch, selectedModel, config, memory, deepThinkingEnabled, webSearchEnabled],
+    [
+      conversations,
+      dispatch,
+      selectedModel,
+      config,
+      memory,
+      deepThinkingEnabled,
+      webSearchEnabled,
+      ensureChatConfigured,
+    ],
   );
 
   const stopStreaming = useCallback(() => {

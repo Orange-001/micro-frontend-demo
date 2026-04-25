@@ -1,5 +1,5 @@
 import { StyleProvider } from '@ant-design/cssinjs';
-import { ConfigProvider, theme as antTheme } from 'antd';
+import { App as AntApp, ConfigProvider, theme as antTheme } from 'antd';
 import { type ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from './store';
@@ -24,7 +24,7 @@ export function AntProvider({ children, microContainer }: Props) {
           },
         }}
       >
-        {children}
+        <AntApp>{children}</AntApp>
       </ConfigProvider>
     </StyleProvider>
   );
