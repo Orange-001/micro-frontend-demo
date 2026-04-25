@@ -15,6 +15,7 @@ VITE_APP_BASE="${BASE}/vue-child/" \
 
 echo "==> Building react-child..."
 VITE_APP_BASE="${BASE}/react-child/" \
+VITE_STABLE_JS_CHUNKS="true" \
   pnpm --filter @mfe/react-child build
 
 echo "==> Merging into dist/..."

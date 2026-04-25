@@ -4,6 +4,8 @@ import UnoCSS from '@unocss/vite';
 import qiankun from 'vite-plugin-qiankun';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 
+const useStableJsChunks = process.env.VITE_STABLE_JS_CHUNKS === 'true';
+
 export default defineConfig({
   plugins: [
     react(),
@@ -20,6 +22,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
+        ...(useStableJsChunks
+          ? {
+              entryFileNames: 'assets/[name].js',
+              chunkFileNames: 'assets/[name].js',
+            }
+          : {}),
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
           if (id.includes('mermaid') || id.includes('cytoscape') || id.includes('dagre')) {
