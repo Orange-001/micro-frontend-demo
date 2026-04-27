@@ -12,10 +12,12 @@ COPY packages ./packages
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @mfe/react-child build
+RUN find /app/apps/react-child/dist -type f \
+  \( -name '*.html' -o -name '*.js' -o -name '*.css' -o -name '*.json' -o -name '*.svg' \) \
+  -size +1k -exec gzip -k -9 {} \;
 
 FROM nginx:1.27-alpine
 COPY --from=build /app/apps/react-child/dist /usr/share/nginx/html
 COPY docker/nginx/spa.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
-

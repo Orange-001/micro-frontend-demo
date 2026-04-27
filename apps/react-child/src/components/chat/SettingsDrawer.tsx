@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Drawer,
@@ -19,9 +19,12 @@ import type { RootState } from '../../store';
 import { configActions } from '../../store/configSlice';
 import { uiActions } from '../../store/uiSlice';
 import { fetchModels } from '../../services/modelFetcher';
-import { ShortcutsConfigModal } from './ShortcutsConfigModal';
 import type { APIProvider, CodeTheme } from '../../types/chat';
 import { CODE_THEMES } from '../../constants/codeThemes';
+
+const ShortcutsConfigModal = lazy(() =>
+  import('./ShortcutsConfigModal').then((module) => ({ default: module.ShortcutsConfigModal })),
+);
 
 interface Props {
   open: boolean;
@@ -270,7 +273,11 @@ export function SettingsDrawer({ open, onClose }: Props) {
       }
     >
       {formContent}
-      <ShortcutsConfigModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      {shortcutsOpen && (
+        <Suspense fallback={null}>
+          <ShortcutsConfigModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+        </Suspense>
+      )}
     </Drawer>
   );
 }

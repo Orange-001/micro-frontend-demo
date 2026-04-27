@@ -29,27 +29,57 @@ export default defineConfig({
             }
           : {}),
         manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (id.includes('mermaid') || id.includes('cytoscape') || id.includes('dagre')) {
+          const normalizedId = id.replace(/\\/g, '/');
+          if (!normalizedId.includes('/node_modules/')) return;
+          if (
+            normalizedId.includes('/node_modules/mermaid') ||
+            normalizedId.includes('/node_modules/cytoscape') ||
+            normalizedId.includes('/node_modules/dagre')
+          ) {
             return 'vendor-mermaid';
           }
           if (
-            id.includes('katex') ||
-            id.includes('react-markdown') ||
-            id.includes('remark-') ||
-            id.includes('rehype-') ||
-            id.includes('highlight.js') ||
-            id.includes('unified') ||
-            id.includes('micromark') ||
-            id.includes('mdast') ||
-            id.includes('hast')
+            normalizedId.includes('/node_modules/katex') ||
+            normalizedId.includes('/node_modules/react-markdown') ||
+            normalizedId.includes('/node_modules/remark-') ||
+            normalizedId.includes('/node_modules/rehype-') ||
+            normalizedId.includes('/node_modules/highlight.js') ||
+            normalizedId.includes('/node_modules/unified') ||
+            normalizedId.includes('/node_modules/micromark') ||
+            normalizedId.includes('/node_modules/mdast') ||
+            normalizedId.includes('/node_modules/hast')
           ) {
             return 'vendor-markdown';
           }
-          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+          if (
+            normalizedId.includes('/node_modules/react/') ||
+            normalizedId.includes('/node_modules/react-dom/') ||
+            normalizedId.includes('/node_modules/react-router') ||
+            normalizedId.includes('/node_modules/scheduler/')
+          ) {
             return 'vendor-react';
           }
-          if (id.includes('antd') || id.includes('@ant-design')) return 'vendor-react';
+          if (
+            normalizedId.includes('/node_modules/antd/') ||
+            normalizedId.includes('/node_modules/@ant-design/') ||
+            normalizedId.includes('/node_modules/@rc-component/') ||
+            normalizedId.includes('/node_modules/rc-') ||
+            normalizedId.includes('/node_modules/dayjs/')
+          ) {
+            return 'vendor-antd';
+          }
+          if (
+            normalizedId.includes('/node_modules/@reduxjs/') ||
+            normalizedId.includes('/node_modules/react-redux/') ||
+            normalizedId.includes('/node_modules/redux') ||
+            normalizedId.includes('/node_modules/immer/') ||
+            normalizedId.includes('/node_modules/reselect/')
+          ) {
+            return 'vendor-state';
+          }
+          if (normalizedId.includes('/node_modules/styled-components/')) {
+            return 'vendor-styled';
+          }
         },
       },
     },

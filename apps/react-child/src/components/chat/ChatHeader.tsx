@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Tooltip } from 'antd';
 import {
@@ -13,7 +14,10 @@ import { chatActions } from '../../store/chatSlice';
 import { exportAsMarkdown } from '../../utils/exportConversation';
 import { ModelSelector } from './ModelSelector';
 import { TokenCounter } from './TokenCounter';
-import { SettingsDrawer } from './SettingsDrawer';
+
+const SettingsDrawer = lazy(() =>
+  import('./SettingsDrawer').then((module) => ({ default: module.SettingsDrawer })),
+);
 
 const Header = styled.div`
   display: flex;
@@ -81,10 +85,14 @@ export function ChatHeader() {
           size="small"
         />
       </Tooltip>
-      <SettingsDrawer
-        open={settingsOpen}
-        onClose={() => dispatch(uiActions.setSettingsDrawerOpen(false))}
-      />
+      {settingsOpen && (
+        <Suspense fallback={null}>
+          <SettingsDrawer
+            open={settingsOpen}
+            onClose={() => dispatch(uiActions.setSettingsDrawerOpen(false))}
+          />
+        </Suspense>
+      )}
     </Header>
   );
 }

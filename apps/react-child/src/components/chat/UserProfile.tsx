@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Avatar, Button, Tooltip } from 'antd';
 import { UserOutlined, BulbOutlined } from '@ant-design/icons';
 import { ThemeToggle } from '../common/ThemeToggle';
-import { MemoryPanel } from './MemoryPanel';
 import styled from 'styled-components';
+
+const MemoryPanel = lazy(() =>
+  import('./MemoryPanel').then((module) => ({ default: module.MemoryPanel })),
+);
 
 const ProfileWrapper = styled.div`
   display: flex;
@@ -39,7 +42,11 @@ export function UserProfile() {
         />
       </Tooltip>
       <ThemeToggle />
-      <MemoryPanel open={memoryOpen} onClose={() => setMemoryOpen(false)} />
+      {memoryOpen && (
+        <Suspense fallback={null}>
+          <MemoryPanel open={memoryOpen} onClose={() => setMemoryOpen(false)} />
+        </Suspense>
+      )}
     </ProfileWrapper>
   );
 }
