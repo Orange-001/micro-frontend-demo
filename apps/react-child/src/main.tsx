@@ -16,6 +16,20 @@ const rcTtfUrl = new URL('./assets/iconfont/iconfont.ttf', import.meta.url).href
 
 type ReactRuntimeProps = Partial<MicroAppRuntimeProps>;
 
+type CssImportProbeResult = {
+  index: number;
+  tag: 'style' | 'link';
+  attrs: Record<string, string>;
+  href?: string;
+  textLength?: number;
+  containsGlobalScss: boolean;
+  containsSharedTokens: boolean;
+};
+
+type ReactChildDebugWindow = Window & {
+  __inspectReactChildCssImports?: () => CssImportProbeResult[];
+};
+
 function normalizeBase(base: string) {
   const normalized = base.replace(/\/$/, '');
   return normalized === '' ? '/' : normalized;
@@ -35,6 +49,35 @@ function injectGlobalStyle(id: string, css: string) {
   }
   return styleEl;
 }
+
+function inspectReactChildCssImports() {
+  const nodes = Array.from(
+    document.head.querySelectorAll<HTMLStyleElement | HTMLLinkElement>(
+      'style, link[rel="stylesheet"]',
+    ),
+  );
+
+  return nodes.map((node, index): CssImportProbeResult => {
+    const attrs = Array.from(node.attributes).reduce<Record<string, string>>((acc, attr) => {
+      acc[attr.name] = attr.value;
+      return acc;
+    }, {});
+    const text = node.tagName.toLowerCase() === 'style' ? node.textContent || '' : '';
+
+    return {
+      index,
+      tag: node.tagName.toLowerCase() as 'style' | 'link',
+      attrs,
+      href: node instanceof HTMLLinkElement ? node.href : undefined,
+      textLength: text.length || undefined,
+      containsGlobalScss: text.includes('.mfe-app-react-child'),
+      containsSharedTokens:
+        text.includes('--mfe-font-family') || text.includes('--mfe-color-react-primary'),
+    };
+  });
+}
+
+(window as ReactChildDebugWindow).__inspectReactChildCssImports = inspectReactChildCssImports;
 
 function render(props: ReactRuntimeProps = {}) {
   const container = props.container ?? document.getElementById('root');
@@ -88,4 +131,10 @@ renderWithQiankun({
 
 if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
   render({ basename: normalizeBase(import.meta.env.BASE_URL) });
+}
+
+if (new URLSearchParams(window.location.search).has('mfeCssDebug')) {
+  window.setTimeout(() => {
+    console.table(inspectReactChildCssImports());
+  });
 }

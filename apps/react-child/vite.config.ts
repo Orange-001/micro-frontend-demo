@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import UnoCSS from '@unocss/vite';
 import qiankun from 'vite-plugin-qiankun';
-import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 
 const useStableJsChunks = process.env.VITE_STABLE_JS_CHUNKS === 'true';
 
@@ -13,7 +12,6 @@ export default defineConfig({
     qiankun('react-child', {
       useDevMode: true,
     }),
-    cssInjectedByJsPlugin(),
   ],
   server: {
     strictPort: true,
