@@ -29,14 +29,16 @@ export function Sidebar() {
   const selectedModel = useSelector((s: RootState) => s.ui.selectedModel);
 
   // INTERVIEW: 二面4 - useTransition 标记过滤为低优先级
-  const [isPending] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   const handleSearch = useCallback(
     (value: string) => {
-      // 直接更新搜索框（高优先级）
-      dispatch(uiActions.setSearchQuery(value));
+      // 搜索结果列表更新可能触发大量会话项重渲染，标记为非紧急更新
+      startTransition(() => {
+        dispatch(uiActions.setSearchQuery(value));
+      });
     },
-    [dispatch],
+    [dispatch, startTransition],
   );
 
   // 过滤并分组的会话列表
@@ -54,18 +56,23 @@ export function Sidebar() {
   }, [conversations, conversationOrder, searchQuery]);
 
   const handleNewChat = useCallback(() => {
-    dispatch(chatActions.createConversation({ model: selectedModel }));
-  }, [dispatch, selectedModel]);
+    startTransition(() => {
+      dispatch(chatActions.createConversation({ model: selectedModel }));
+    });
+  }, [dispatch, selectedModel, startTransition]);
 
   const handleSelectConversation = useCallback(
     (id: string) => {
-      dispatch(chatActions.setActiveConversation(id));
       // 移动端选择后自动关闭侧边栏
       if (window.innerWidth <= 768) {
         dispatch(uiActions.setSidebarCollapsed(true));
       }
+      // 切换会话会带动 MainArea / MessageList / Markdown 重渲染，降级避免阻塞点击反馈
+      startTransition(() => {
+        dispatch(chatActions.setActiveConversation(id));
+      });
     },
-    [dispatch],
+    [dispatch, startTransition],
   );
 
   const handleDeleteConversation = useCallback(

@@ -191,6 +191,10 @@ async function* streamFromRealAPI(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  const abortReader = () => {
+    void reader.cancel();
+  };
+  signal?.addEventListener('abort', abortReader, { once: true });
 
   try {
     while (true) {
@@ -222,6 +226,7 @@ async function* streamFromRealAPI(
       if (chunk && chunk.type !== 'done') yield chunk;
     }
   } finally {
+    signal?.removeEventListener('abort', abortReader);
     reader.releaseLock();
   }
 }
@@ -241,6 +246,10 @@ async function* streamFromMock(
   const reader = mockStream.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  const abortReader = () => {
+    void reader.cancel();
+  };
+  signal?.addEventListener('abort', abortReader, { once: true });
 
   try {
     while (true) {
@@ -272,6 +281,7 @@ async function* streamFromMock(
       if (chunk && chunk.type !== 'done') yield chunk;
     }
   } finally {
+    signal?.removeEventListener('abort', abortReader);
     reader.releaseLock();
   }
 }

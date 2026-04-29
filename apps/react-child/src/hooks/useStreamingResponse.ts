@@ -34,6 +34,8 @@ function frameYield(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+let currentAbortController: AbortController | null = null;
+
 export function useStreamingResponse() {
   const dispatch = useDispatch<AppDispatch>();
   const activeId = useSelector((s: RootState) => s.chat.activeConversationId);
@@ -91,6 +93,7 @@ export function useStreamingResponse() {
 
       const controller = createStreamAbortController();
       abortControllerRef.current = controller;
+      currentAbortController = controller;
 
       try {
         // 过滤掉错误消息，避免将之前的 API 错误发送给模型
@@ -190,6 +193,7 @@ export function useStreamingResponse() {
         }
       } finally {
         dispatch(chatActions.finalizeStreaming(conversationId));
+        if (currentAbortController === controller) currentAbortController = null;
         abortControllerRef.current = null;
       }
     },
@@ -228,6 +232,7 @@ export function useStreamingResponse() {
 
       const controller = createStreamAbortController();
       abortControllerRef.current = controller;
+      currentAbortController = controller;
 
       const systemMessage = buildMemorySystemMessage(
         memory.items,
@@ -311,6 +316,7 @@ export function useStreamingResponse() {
         }
       } finally {
         dispatch(chatActions.finalizeStreaming(conversationId));
+        if (currentAbortController === controller) currentAbortController = null;
         abortControllerRef.current = null;
       }
     },
@@ -327,8 +333,12 @@ export function useStreamingResponse() {
   );
 
   const stopStreaming = useCallback(() => {
-    abortControllerRef.current?.abort();
-  }, []);
+    const controller = abortControllerRef.current ?? currentAbortController;
+    controller?.abort();
+    abortControllerRef.current = null;
+    if (currentAbortController === controller) currentAbortController = null;
+    if (activeId) dispatch(chatActions.finalizeStreaming(activeId));
+  }, [activeId, dispatch]);
 
   return { sendMessage, editAndResendMessage, stopStreaming, isStreaming };
 }
