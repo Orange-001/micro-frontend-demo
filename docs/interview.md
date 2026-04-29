@@ -114,4 +114,9 @@
     1. 流式输出时，减少 token 更新对输入和点击的阻塞
     2. 长列表和复杂 Markdown 渲染时，让页面保持可交互
     3. 在高频更新场景下，通过调度和批处理减少无效渲染
-
+6. 如何在前端实现Markdown 的实时渲染，并支持代码高亮和数学公式？
+  - 可以用react-markdown解析，通过remark-highlight支持高亮，remark-math+rehype-katex支持数学公式
+  - 流式渲染时可以先不展示高亮和数学公式，等数据全部渲染完成后再展示。避免每个token都重新解析整段内容。
+7. 如何处理 AI接口的超时和重试机制的？
+  - 策略：AI 接口超时（setTimeout）一般用 AbortController 控制请求生命周期，并在 SSE 场景下额外调用 reader.cancel() 释放流读取；重试一般用指数退避 + jitter（delay = baseDelay * 2^attempt + jitter
+），只对网络错误、超时、429、5xx 这类可恢复错误重试

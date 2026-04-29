@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import type { Message } from '../../types/chat';
 import { chatActions } from '../../store/chatSlice';
+import { useStreamingResponse } from '../../hooks/useStreamingResponse';
 
 interface Props {
   message: Message;
@@ -20,6 +21,7 @@ interface Props {
 export function MessageActions({ message: msg, conversationId }: Props) {
   const dispatch = useDispatch();
   const isAssistant = msg.role === 'assistant';
+  const { regenerateMessage, isStreaming } = useStreamingResponse();
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(msg.content);
@@ -27,8 +29,8 @@ export function MessageActions({ message: msg, conversationId }: Props) {
   }, [msg.content]);
 
   const handleRegenerate = useCallback(() => {
-    dispatch(chatActions.deleteLastAssistantMessage(conversationId));
-  }, [dispatch, conversationId]);
+    regenerateMessage(conversationId, msg.id);
+  }, [regenerateMessage, conversationId, msg.id]);
 
   const handleReaction = useCallback(
     (reaction: 'like' | 'dislike') => {
@@ -51,7 +53,13 @@ export function MessageActions({ message: msg, conversationId }: Props) {
       {isAssistant && (
         <>
           <Tooltip title="重新生成">
-            <Button type="text" size="small" icon={<ReloadOutlined />} onClick={handleRegenerate} />
+            <Button
+              type="text"
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={handleRegenerate}
+              disabled={isStreaming}
+            />
           </Tooltip>
           <Tooltip title="赞">
             <Button

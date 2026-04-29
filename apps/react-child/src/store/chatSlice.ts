@@ -144,6 +144,16 @@ const chatSlice = createSlice({
       }
     },
 
+    deleteMessagesFrom(
+      state,
+      action: PayloadAction<{ conversationId: string; startIndex: number }>,
+    ) {
+      const conv = state.conversations[action.payload.conversationId];
+      if (!conv) return;
+      conv.messages = conv.messages.slice(0, action.payload.startIndex);
+      conv.updatedAt = Date.now();
+    },
+
     toggleReaction(
       state,
       action: PayloadAction<{ conversationId: string; messageId: string; reaction: Reaction }>,

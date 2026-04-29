@@ -332,6 +332,131 @@ export function useStreamingResponse() {
     ],
   );
 
+  const regenerateMessage = useCallback(
+    async (conversationId: string, assistantMessageId: string) => {
+      if (!ensureChatConfigured() || isStreaming) return;
+
+      const conv = conversations[conversationId];
+      if (!conv) return;
+
+      const assistantIndex = conv.messages.findIndex((m) => m.id === assistantMessageId);
+      if (assistantIndex === -1) return;
+
+      const messages = conv.messages
+        .slice(0, assistantIndex)
+        .filter((m) => !m.content.includes('⚠️ Error:') && !m.content.includes('⚠️ 请求失败:'));
+
+      const hasUserPrompt = messages.some((m) => m.role === 'user');
+      if (!hasUserPrompt) return;
+
+      dispatch(chatActions.deleteMessagesFrom({ conversationId, startIndex: assistantIndex }));
+
+      const assistantMsgId = `msg-${Date.now()}-assistant`;
+      dispatch(chatActions.startStreaming({ conversationId, messageId: assistantMsgId }));
+
+      const controller = createStreamAbortController();
+      abortControllerRef.current = controller;
+      currentAbortController = controller;
+
+      const systemMessage = buildMemorySystemMessage(
+        memory.items,
+        memory.globalEnabled,
+        conv.memoryEnabled ?? true,
+      );
+
+      const apiConfig: APIConfig | undefined = config.apiKey ? config : undefined;
+
+      try {
+        const stream = streamChat(messages, {
+          model: selectedModel,
+          signal: controller.signal,
+          apiConfig,
+          systemMessage: systemMessage ?? undefined,
+          deepThinking: deepThinkingEnabled,
+          webSearch: webSearchEnabled,
+        });
+
+        let isInReasoning = false;
+
+        for await (const chunk of stream) {
+          if (chunk.type === 'reasoning') {
+            let prefix = '';
+            if (!isInReasoning) {
+              isInReasoning = true;
+              prefix = '> **💭 思考过程**\n>\n> ';
+            }
+            const quotedContent = chunk.content.replace(/\n/g, '\n> ');
+            flushSync(() => {
+              dispatch(
+                chatActions.appendStreamChunk({
+                  conversationId,
+                  content: prefix + quotedContent,
+                }),
+              );
+            });
+            await frameYield();
+          } else if (chunk.type === 'text') {
+            let prefix = '';
+            if (isInReasoning) {
+              isInReasoning = false;
+              prefix = '\n\n---\n\n';
+            }
+            flushSync(() => {
+              dispatch(
+                chatActions.appendStreamChunk({
+                  conversationId,
+                  content: prefix + chunk.content,
+                }),
+              );
+            });
+            await frameYield();
+          } else if (chunk.type === 'error') {
+            dispatch(
+              chatActions.appendStreamChunk({
+                conversationId,
+                content: `\n\n⚠️ Error: ${chunk.content}`,
+              }),
+            );
+            break;
+          }
+        }
+
+        if (isInReasoning) {
+          dispatch(
+            chatActions.appendStreamChunk({
+              conversationId,
+              content: '\n\n---\n\n',
+            }),
+          );
+        }
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          dispatch(
+            chatActions.appendStreamChunk({
+              conversationId,
+              content: `\n\n⚠️ 请求失败: ${error.message}`,
+            }),
+          );
+        }
+      } finally {
+        dispatch(chatActions.finalizeStreaming(conversationId));
+        if (currentAbortController === controller) currentAbortController = null;
+        abortControllerRef.current = null;
+      }
+    },
+    [
+      conversations,
+      dispatch,
+      selectedModel,
+      config,
+      memory,
+      deepThinkingEnabled,
+      webSearchEnabled,
+      ensureChatConfigured,
+      isStreaming,
+    ],
+  );
+
   const stopStreaming = useCallback(() => {
     const controller = abortControllerRef.current ?? currentAbortController;
     controller?.abort();
@@ -340,5 +465,5 @@ export function useStreamingResponse() {
     if (activeId) dispatch(chatActions.finalizeStreaming(activeId));
   }, [activeId, dispatch]);
 
-  return { sendMessage, editAndResendMessage, stopStreaming, isStreaming };
+  return { sendMessage, editAndResendMessage, regenerateMessage, stopStreaming, isStreaming };
 }

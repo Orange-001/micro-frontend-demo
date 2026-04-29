@@ -32,6 +32,11 @@ import type {
 import { getMatchedResponse } from './mockResponses';
 import { searchWeb, formatSearchContext } from './webSearch';
 
+const DEFAULT_REQUEST_TIMEOUT = 30_000;
+const DEFAULT_STREAM_IDLE_TIMEOUT = 45_000;
+const MAX_REQUEST_RETRIES = 2;
+const RETRY_BASE_DELAY = 1_000;
+
 /**
  * INTERVIEW: 一面1 - Promise + async generator 处理异步流
  *
@@ -169,16 +174,25 @@ async function* streamFromRealAPI(
 
   const body = JSON.stringify(bodyObj);
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body,
-    signal,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => response.statusText);
-    yield { type: 'error', content: `API Error ${response.status}: ${errorText}` };
+  let response: Response;
+  try {
+    response = await fetchWithRetry(
+      url,
+      {
+        method: 'POST',
+        headers,
+        body,
+      },
+      {
+        signal,
+        timeout: options.timeout ?? DEFAULT_REQUEST_TIMEOUT,
+        maxRetries: MAX_REQUEST_RETRIES,
+        baseDelay: RETRY_BASE_DELAY,
+      },
+    );
+  } catch (error: any) {
+    if (signal?.aborted) return;
+    yield { type: 'error', content: formatRequestError(error) };
     return;
   }
 
@@ -203,7 +217,11 @@ async function* streamFromRealAPI(
         return;
       }
 
-      const { done, value } = await reader.read();
+      const { done, value } = await readWithIdleTimeout(
+        reader,
+        DEFAULT_STREAM_IDLE_TIMEOUT,
+        signal,
+      );
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
@@ -343,6 +361,180 @@ function parseSSEEvent(event: string): StreamChunk | null {
 
   // 纯文本 (Mock 格式)
   return { type: 'text', content: data };
+}
+
+class RequestTimeoutError extends Error {
+  constructor(timeout: number) {
+    super(`请求超时（${Math.round(timeout / 1000)}s）`);
+    this.name = 'RequestTimeoutError';
+  }
+}
+
+class StreamIdleTimeoutError extends Error {
+  constructor(timeout: number) {
+    super(`流式响应超时：${Math.round(timeout / 1000)}s 内没有收到新数据`);
+    this.name = 'StreamIdleTimeoutError';
+  }
+}
+
+class RetryableHTTPError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly body: string,
+  ) {
+    super(`API Error ${status}: ${body}`);
+    this.name = 'RetryableHTTPError';
+  }
+}
+
+class NonRetryableHTTPError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly body: string,
+  ) {
+    super(`API Error ${status}: ${body}`);
+    this.name = 'NonRetryableHTTPError';
+  }
+}
+
+interface FetchRetryOptions {
+  signal?: AbortSignal;
+  timeout: number;
+  maxRetries: number;
+  baseDelay: number;
+}
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  options: FetchRetryOptions,
+): Promise<Response> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= options.maxRetries; attempt++) {
+    try {
+      const response = await fetchWithTimeout(url, init, options.timeout, options.signal);
+      if (response.ok) return response;
+
+      const errorText = await response.text().catch(() => response.statusText);
+      const error = isRetryableStatus(response.status)
+        ? new RetryableHTTPError(response.status, errorText)
+        : new NonRetryableHTTPError(response.status, errorText);
+
+      if (!isRetryableError(error) || attempt === options.maxRetries) throw error;
+      lastError = error;
+    } catch (error) {
+      if (options.signal?.aborted) throw error;
+      if (!isRetryableError(error) || attempt === options.maxRetries) throw error;
+      lastError = error;
+    }
+
+    await delay(getRetryDelay(options.baseDelay, attempt), options.signal);
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('请求重试失败');
+}
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeout: number,
+  signal?: AbortSignal,
+): Promise<Response> {
+  const controller = new AbortController();
+  let timedOut = false;
+
+  const abortFromOuterSignal = () => {
+    controller.abort();
+  };
+
+  if (signal?.aborted) controller.abort();
+  signal?.addEventListener('abort', abortFromOuterSignal, { once: true });
+
+  const timer = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeout);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (timedOut) throw new RequestTimeoutError(timeout);
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+    signal?.removeEventListener('abort', abortFromOuterSignal);
+  }
+}
+
+async function readWithIdleTimeout(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  timeout: number,
+  signal?: AbortSignal,
+): Promise<ReadableStreamReadResult<Uint8Array>> {
+  if (signal?.aborted) {
+    await reader.cancel();
+    return { done: true, value: undefined };
+  }
+
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    return await Promise.race([
+      reader.read(),
+      new Promise<ReadableStreamReadResult<Uint8Array>>((_, reject) => {
+        timer = setTimeout(() => {
+          void reader.cancel();
+          reject(new StreamIdleTimeoutError(timeout));
+        }, timeout);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function isRetryableStatus(status: number): boolean {
+  return status === 408 || status === 409 || status === 425 || status === 429 || status >= 500;
+}
+
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof RequestTimeoutError) return true;
+  if (error instanceof RetryableHTTPError) return true;
+  return error instanceof TypeError;
+}
+
+function getRetryDelay(baseDelay: number, attempt: number): number {
+  const exponentialDelay = baseDelay * 2 ** attempt;
+  const jitter = Math.random() * exponentialDelay * 0.1;
+  return exponentialDelay + jitter;
+}
+
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'));
+      return;
+    }
+
+    const timer = setTimeout(resolve, ms);
+    const abort = () => {
+      clearTimeout(timer);
+      reject(new DOMException('Aborted', 'AbortError'));
+    };
+    signal?.addEventListener('abort', abort, { once: true });
+  });
+}
+
+function formatRequestError(error: unknown): string {
+  if (error instanceof NonRetryableHTTPError || error instanceof RetryableHTTPError) {
+    return error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return '请求失败，请稍后重试';
 }
 
 /**
