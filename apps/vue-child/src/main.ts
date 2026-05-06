@@ -7,15 +7,12 @@ import { createAppRouter } from './router';
 import '@mfe/shared/iconfont.css';
 import './assets/iconfont/iconfont.css';
 import 'uno.css';
+import 'ol/ol.css';
 import './styles/global.scss';
 
 const vcWoff2Url = new URL('./assets/iconfont/iconfont.woff2', import.meta.url).href;
 const vcWoffUrl = new URL('./assets/iconfont/iconfont.woff', import.meta.url).href;
 const vcTtfUrl = new URL('./assets/iconfont/iconfont.ttf', import.meta.url).href;
-import { ElButton } from 'element-plus/es/components/button/index';
-import elementPlusBaseCss from 'element-plus/theme-chalk/base.css?inline';
-import elementPlusButtonCss from 'element-plus/theme-chalk/el-button.css?inline';
-import elementPlusMessageCss from 'element-plus/theme-chalk/el-message.css?inline';
 
 type VueRuntimeProps = Partial<MicroAppRuntimeProps>;
 
@@ -24,7 +21,6 @@ function normalizeBase(base: string) {
   return normalized === '' ? '/' : normalized;
 }
 
-let elementPlusStyleEl: HTMLStyleElement | null = null;
 let vcFontStyleEl: HTMLStyleElement | null = null;
 let app: ReturnType<typeof createApp> | null = null;
 let mountRoot: HTMLElement | null = null;
@@ -58,11 +54,6 @@ function render(props: VueRuntimeProps = {}) {
 }`,
   );
 
-  elementPlusStyleEl = injectGlobalStyle(
-    'vue-child-element-plus',
-    `${elementPlusBaseCss}\n${elementPlusButtonCss}\n${elementPlusMessageCss}`,
-  );
-
   app = createApp(App);
   app.use(createPinia());
   app.use(
@@ -72,8 +63,6 @@ function render(props: VueRuntimeProps = {}) {
         : normalizeBase(import.meta.env.BASE_URL),
     ),
   );
-  app.provide('mfeMountContainer', mountRoot);
-  app.use(ElButton);
   app.mount(mountRoot);
 }
 
@@ -89,8 +78,6 @@ renderWithQiankun({
     mountRoot = null;
     vcFontStyleEl?.remove();
     vcFontStyleEl = null;
-    elementPlusStyleEl?.remove();
-    elementPlusStyleEl = null;
   },
   update() {},
 });

@@ -18,11 +18,14 @@ export default defineConfig({
     port: 3001,
   },
   build: {
+    chunkSizeWarningLimit: 650,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
-          if (id.includes('element-plus')) return 'vendor-element-plus';
+          if (id.includes('echarts')) return 'vendor-echarts';
+          if (id.includes('three')) return 'vendor-three';
+          if (id.includes('/ol/') || id.includes('\\ol\\')) return 'vendor-openlayers';
           if (id.includes('vue') || id.includes('pinia')) return 'vendor-vue';
         },
       },

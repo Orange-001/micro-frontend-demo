@@ -1,0 +1,400 @@
+import type {
+  CityEvent,
+  DispatchBuilding,
+  DistrictArea,
+  ResourceMetric,
+  ResponseRoute,
+  RiskTrendPoint,
+  RoadSegment,
+} from '../types/commandCenter';
+
+export const cityCenter: [number, number] = [121.4762, 31.2229];
+
+export const districtAreas: DistrictArea[] = [
+  {
+    id: 'central',
+    name: '中央调度区',
+    risk: 'warning',
+    polygon: [
+      [121.4572, 31.2318],
+      [121.4746, 31.2384],
+      [121.4884, 31.2294],
+      [121.483, 31.2168],
+      [121.4624, 31.216],
+    ],
+  },
+  {
+    id: 'river',
+    name: '滨江交通区',
+    risk: 'critical',
+    polygon: [
+      [121.4884, 31.2294],
+      [121.5058, 31.2336],
+      [121.5148, 31.219],
+      [121.4988, 31.2106],
+      [121.483, 31.2168],
+    ],
+  },
+  {
+    id: 'west',
+    name: '西部能源区',
+    risk: 'warning',
+    polygon: [
+      [121.4396, 31.2184],
+      [121.4624, 31.216],
+      [121.4572, 31.2318],
+      [121.4376, 31.2312],
+    ],
+  },
+  {
+    id: 'south',
+    name: '南部保障区',
+    risk: 'normal',
+    polygon: [
+      [121.4624, 31.216],
+      [121.483, 31.2168],
+      [121.4988, 31.2106],
+      [121.4882, 31.1984],
+      [121.4558, 31.201],
+    ],
+  },
+];
+
+export const roadSegments: RoadSegment[] = [
+  {
+    id: 'r1',
+    name: '人民大道快速线',
+    level: 'main',
+    path: [
+      [121.438, 31.2286],
+      [121.457, 31.2268],
+      [121.476, 31.2242],
+      [121.498, 31.222],
+      [121.515, 31.2205],
+    ],
+  },
+  {
+    id: 'r2',
+    name: '滨江应急通道',
+    level: 'main',
+    path: [
+      [121.487, 31.234],
+      [121.497, 31.228],
+      [121.507, 31.22],
+      [121.514, 31.213],
+    ],
+  },
+  {
+    id: 'r3',
+    name: '能源环线',
+    level: 'secondary',
+    path: [
+      [121.442, 31.219],
+      [121.455, 31.214],
+      [121.474, 31.213],
+      [121.487, 31.206],
+    ],
+  },
+  {
+    id: 'r4',
+    name: '医疗保障线',
+    level: 'secondary',
+    path: [
+      [121.451, 31.203],
+      [121.465, 31.208],
+      [121.481, 31.216],
+      [121.494, 31.227],
+    ],
+  },
+];
+
+export const responseRoutes: ResponseRoute[] = [
+  {
+    id: 'route-transit',
+    eventId: 'evt-transit-crowd',
+    path: [
+      [121.4762, 31.2229],
+      [121.4886, 31.2244],
+      [121.5018, 31.2258],
+    ],
+  },
+  {
+    id: 'route-energy',
+    eventId: 'evt-energy-station',
+    path: [
+      [121.4762, 31.2229],
+      [121.4594, 31.2204],
+      [121.4472, 31.2221],
+    ],
+  },
+  {
+    id: 'route-road',
+    eventId: 'evt-road-delay',
+    path: [
+      [121.4762, 31.2229],
+      [121.4878, 31.2164],
+      [121.4962, 31.2118],
+    ],
+  },
+  {
+    id: 'route-security',
+    eventId: 'evt-camera-offline',
+    path: [
+      [121.4762, 31.2229],
+      [121.4684, 31.2164],
+      [121.4564, 31.2074],
+    ],
+  },
+];
+
+export const dispatchBuildings: DispatchBuilding[] = [
+  {
+    id: 'b-command',
+    name: 'AI 指挥中心',
+    type: 'command',
+    status: 'normal',
+    position: [0, 0],
+    size: [2.4, 2],
+    height: 2.6,
+  },
+  {
+    id: 'b-terminal',
+    name: '滨江换乘枢纽',
+    type: 'transit',
+    status: 'critical',
+    position: [5.2, -0.8],
+    size: [2.1, 1.8],
+    height: 3.4,
+  },
+  {
+    id: 'b-energy',
+    name: '西区能源站',
+    type: 'energy',
+    status: 'warning',
+    position: [-4.8, 1.3],
+    size: [1.8, 1.6],
+    height: 2.8,
+  },
+  {
+    id: 'b-medical',
+    name: '南部医疗点',
+    type: 'medical',
+    status: 'normal',
+    position: [-1.6, -4.3],
+    size: [1.9, 1.4],
+    height: 2,
+  },
+  {
+    id: 'b-security',
+    name: '安防网关',
+    type: 'security',
+    status: 'warning',
+    position: [2.6, -3.6],
+    size: [1.4, 1.4],
+    height: 1.8,
+  },
+  {
+    id: 'b-storage',
+    name: '应急物资仓',
+    type: 'storage',
+    status: 'normal',
+    position: [-5.6, -2.3],
+    size: [2.2, 1.6],
+    height: 2.1,
+  },
+];
+
+export const cityEvents: CityEvent[] = [
+  {
+    id: 'evt-transit-crowd',
+    title: '换乘枢纽客流异常',
+    category: '交通',
+    severity: 'critical',
+    status: 'dispatching',
+    district: '滨江交通区',
+    coordinate: [121.5018, 31.2258],
+    buildingId: 'b-terminal',
+    timestamp: '14:28',
+    impact: '客流密度超过阈值，预计 18 分钟后影响周边两条主干道。',
+    recommendation: '开放备用通道，增派 2 组引导人员，并将网约车上客点外移 300 米。',
+    metrics: {
+      affectedPeople: 3400,
+      etaMinutes: 12,
+      confidence: 92,
+    },
+    agentSteps: [
+      {
+        id: 's1',
+        title: '聚合客流与闸机数据',
+        detail: '已完成 6 个入口、12 个闸机口的数据校验。',
+        status: 'done',
+        tool: 'traffic-sensor',
+        elapsed: '1.2s',
+      },
+      {
+        id: 's2',
+        title: '预测拥堵扩散范围',
+        detail: '正在结合道路容量、历史事件和天气因子推演。',
+        status: 'running',
+        tool: 'forecast-model',
+        elapsed: '3.8s',
+      },
+      {
+        id: 's3',
+        title: '生成处置方案',
+        detail: '等待人工确认后推送到调度系统。',
+        status: 'waiting',
+        tool: 'dispatch-agent',
+        elapsed: '-',
+      },
+    ],
+  },
+  {
+    id: 'evt-energy-station',
+    title: '西区能源站负载过高',
+    category: '能源',
+    severity: 'warning',
+    status: 'pending',
+    district: '西部能源区',
+    coordinate: [121.4472, 31.2221],
+    buildingId: 'b-energy',
+    timestamp: '14:19',
+    impact: '冷却系统负载达到 87%，若持续上升会影响周边楼宇空调与照明。',
+    recommendation: '切换 15% 负载到备用站，延迟非核心照明策略，并派发巡检工单。',
+    metrics: {
+      affectedPeople: 920,
+      etaMinutes: 24,
+      confidence: 88,
+    },
+    agentSteps: [
+      {
+        id: 's1',
+        title: '读取能源站遥测',
+        detail: '已获取温度、负载和备用容量曲线。',
+        status: 'done',
+        tool: 'iot-gateway',
+        elapsed: '0.9s',
+      },
+      {
+        id: 's2',
+        title: '匹配历史故障样本',
+        detail: '找到 3 次相似负载抖动记录。',
+        status: 'done',
+        tool: 'rag-search',
+        elapsed: '1.7s',
+      },
+      {
+        id: 's3',
+        title: '生成巡检路径',
+        detail: '等待调度员选择巡检人员。',
+        status: 'waiting',
+        tool: 'route-planner',
+        elapsed: '-',
+      },
+    ],
+  },
+  {
+    id: 'evt-road-delay',
+    title: '南部主路通行延误',
+    category: '交通',
+    severity: 'warning',
+    status: 'contained',
+    district: '南部保障区',
+    coordinate: [121.4962, 31.2118],
+    buildingId: 'b-command',
+    timestamp: '14:05',
+    impact: '应急车辆平均通行时间增加 4.6 分钟。',
+    recommendation: '保持当前信号灯配时，15 分钟后复核拥堵指数。',
+    metrics: {
+      affectedPeople: 620,
+      etaMinutes: 8,
+      confidence: 81,
+    },
+    agentSteps: [
+      {
+        id: 's1',
+        title: '读取路网速度',
+        detail: '已同步 4 条路段速度与排队长度。',
+        status: 'done',
+        tool: 'road-network',
+        elapsed: '0.8s',
+      },
+      {
+        id: 's2',
+        title: '评估信号灯策略',
+        detail: '当前配时已降低 18% 排队长度。',
+        status: 'done',
+        tool: 'signal-agent',
+        elapsed: '2.2s',
+      },
+      {
+        id: 's3',
+        title: '持续监控',
+        detail: '进入观察状态。',
+        status: 'running',
+        tool: 'monitor',
+        elapsed: '5.1s',
+      },
+    ],
+  },
+  {
+    id: 'evt-camera-offline',
+    title: '安防摄像头离线',
+    category: '安防',
+    severity: 'normal',
+    status: 'pending',
+    district: '南部保障区',
+    coordinate: [121.4564, 31.2074],
+    buildingId: 'b-security',
+    timestamp: '13:56',
+    impact: '影响一处物资仓入口画面，周边仍有 2 个相邻点位可覆盖。',
+    recommendation: '先切换相邻摄像头视角，再派发低优先级巡检。',
+    metrics: {
+      affectedPeople: 110,
+      etaMinutes: 32,
+      confidence: 76,
+    },
+    agentSteps: [
+      {
+        id: 's1',
+        title: '校验设备心跳',
+        detail: '设备网关 11 分钟无心跳。',
+        status: 'done',
+        tool: 'device-monitor',
+        elapsed: '0.6s',
+      },
+      {
+        id: 's2',
+        title: '切换替代视角',
+        detail: '已推荐两个相邻点位。',
+        status: 'running',
+        tool: 'camera-router',
+        elapsed: '1.4s',
+      },
+      {
+        id: 's3',
+        title: '创建维修工单',
+        detail: '等待确认。',
+        status: 'waiting',
+        tool: 'work-order',
+        elapsed: '-',
+      },
+    ],
+  },
+];
+
+export const riskTrend: RiskTrendPoint[] = [
+  { time: '13:40', critical: 0, warning: 2, normal: 4 },
+  { time: '13:50', critical: 0, warning: 3, normal: 4 },
+  { time: '14:00', critical: 1, warning: 3, normal: 3 },
+  { time: '14:10', critical: 1, warning: 2, normal: 4 },
+  { time: '14:20', critical: 1, warning: 3, normal: 3 },
+  { time: '14:30', critical: 1, warning: 2, normal: 5 },
+];
+
+export const resourceMetrics: ResourceMetric[] = [
+  { name: '应急人员', value: 68, capacity: 90 },
+  { name: '巡检车辆', value: 21, capacity: 32 },
+  { name: '备用电力', value: 74, capacity: 100 },
+  { name: '医疗点位', value: 12, capacity: 18 },
+];
