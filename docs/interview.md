@@ -120,3 +120,40 @@
 7. 如何处理 AI接口的超时和重试机制的？
   - 策略：AI 接口超时（setTimeout）一般用 AbortController 控制请求生命周期，并在 SSE 场景下额外调用 reader.cancel() 释放流读取；重试一般用指数退避 + jitter（delay = baseDelay * 2^attempt + jitter
 ），只对网络错误、超时、429、5xx 这类可恢复错误重试
+8. 如何评估和优化 AI应用的加载性能和交互延迟？
+  - 核心指标
+
+    | 指标 | 含义 | 关注点 |
+    |---|---|---|
+    | FCP | 首次内容绘制 | 页面是否尽快有内容 |
+    | LCP | 最大内容绘制 | 首屏主体内容是否快 |
+    | TTI / INP | 可交互延迟 | 输入框、按钮是否卡顿 |
+    | JS Bundle Size | JS 体积 | 是否影响首屏加载 |
+    | TTFB | 首字节时间 | 服务端响应速度 |
+    | Time to First Token | 用户发问到第一个 token 出现 | AI 应用最关键指标 |
+    | Tokens/sec | 输出速度 | 模型流式响应体验 |
+    | End-to-End Latency | 从提交到完整回答结束 | 总体响应耗时 |
+    | Tool Call Latency | 工具调用耗时 | RAG、搜索、函数调用是否慢 |
+    | Render Latency | token 到达后渲染到页面耗时 | Markdown、代码高亮、图表是否卡 |
+  - 评估手段
+    - 前端：Chrome DevTools Performance/Network、Lighthouse、bundle analyzer
+    - 链路埋点：点击发送 → 请求发出 → 首 token 返回 → 首 token 渲染 → 回复完成
+    - 后端 trace：鉴权、上下文构造、RAG 检索、工具调用、模型排队、模型生成、落库分别打点
+  - 优化方案
+    - 加载：路由懒加载、拆包、按需加载 Markdown/Mermaid/KaTeX/Monaco、静态资源强缓存、减少首屏同步逻辑
+    - 首 token：流式响应（SSE/ReadableStream）、缩短 prompt、裁剪上下文、RAG 缓存、工具调用并行、模型连接复用
+    - 渲染：token 批量更新（requestAnimationFrame/节流）、长会话虚拟列表、消息组件 memo、输出完成后再做代码高亮/公式渲染
+    - 体验：发送后立即乐观展示用户消息和 assistant 占位，用快模型处理简单任务，慢工具调用给明确 loading 状态
+9. 什么是闭包？在开发AI相关的Hooks 或工具函数时，闭包通常用来做什么？
+  - 概念：函数可以访问并记住创建它时所在作用域里的变量，即使函数在外部异步执行也能继续使用这些变量
+  - 应用
+    - 保存请求上下文：如 `AbortController`，`sendMessage` 创建，`stopStreaming` 中断
+    - 保存流式状态：如 SSE `buffer`、`isInReasoning`、是否收到首 token
+    - 保存定时器：如 `debounce` 的 `timer/lastArgs`，避免频繁搜索或写入
+10. 介绍一下 RAG（检索增强生成）在前端侧可以参与哪些工作？
+  - RAG 的核心检索和生成通常在后端，但前端可以参与查询增强、上下文收集、文件上传、检索范围选择、引用展示、溯源交互、检索过程可视化、用户反馈和缓存优化。前端的重点不是做 embedding，而是把用户上下文传准确，把检索过程和证据展示清楚，并形成反馈闭环
+11. 在构建 AI 应用时，如何设计一个可扩展的 Prompt 模板引擎？
+  - 支持变量系统、条件渲染、循环渲染、版本管理、插件化扩展。
+  - 主要是通过正则实现
+12. 谈谈前端工程化中，针对 AI 项目有哪些特殊的 CI/CD 或监控指标？
+  - AI 项目的前端 CI/CD 除了常规构建、测试和部署，还要把 Prompt、模型配置、流式协议、长文本渲染和 bundle 预算纳入质量门禁。监控上除了 Web Vitals，还要重点看 Time to First Token、tokens/sec、端到端耗时、流式中断率、Prompt 版本、模型错误率、RAG/工具调用耗时以及 Markdown 渲染性能。AI 应用的问题往往不是页面挂了，而是“首 token 慢、流断了、引用错了、长文本卡了”，所以指标要围绕这些链路设计。
