@@ -26,9 +26,7 @@
   min-height: 100%;
   padding: 14px;
   color: #f8fafc;
-  background:
-    linear-gradient(180deg, rgba(31, 41, 55, 0.34), rgba(18, 18, 16, 0.94)),
-    #11100f;
+  background: linear-gradient(180deg, rgba(31, 41, 55, 0.34), rgba(18, 18, 16, 0.94)), #11100f;
 }
 
 .mfe-app-vue-child .vc-topbar {
@@ -345,8 +343,7 @@
   min-height: 300px;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    #111827;
+    linear-gradient(0deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px), #111827;
   background-size: 34px 34px;
 }
 
@@ -463,16 +460,13 @@
 
 .mfe-app-vue-child .cc-agent-head code {
   min-width: 0;
-  max-width: 48%;
   border-radius: 6px;
   padding: 2px 5px;
   color: #93c5fd;
   background: rgba(147, 197, 253, 0.12);
   font-size: 11px;
-  overflow-wrap: anywhere;
-  text-align: right;
-  white-space: normal;
   word-break: break-all;
+  white-space: nowrap;
 }
 
 @container (max-width: 270px) {
