@@ -3,13 +3,16 @@
 </template>
 
 <script setup lang="ts">
+import 'ol/ol.css';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import Feature from 'ol/Feature';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { LineString, Point, Polygon } from 'ol/geom';
 import { fromLonLat } from 'ol/proj';
+import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
+import OSM from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
 import { Circle as CircleStyle, Fill, Stroke, Style, Text } from 'ol/style';
 import type { Coordinate } from 'ol/coordinate';
@@ -24,6 +27,7 @@ import type {
 
 const props = defineProps<{
   center: [number, number];
+  zoom: number;
   districts: DistrictArea[];
   roads: RoadSegment[];
   routes: ResponseRoute[];
@@ -38,6 +42,7 @@ const emit = defineEmits<{
 
 let map: Map | null = null;
 let resizeObserver: ResizeObserver | null = null;
+let baseLayer: TileLayer<OSM> | null = null;
 let districtLayer: VectorLayer<VectorSource<Feature>> | null = null;
 let roadLayer: VectorLayer<VectorSource<Feature>> | null = null;
 let routeLayer: VectorLayer<VectorSource<Feature>> | null = null;
@@ -207,13 +212,32 @@ function syncLayerVisibility() {
   eventLayer?.setVisible(props.activeLayers.events);
 }
 
+function rebuildVectorLayers() {
+  if (!map) return;
+
+  [districtLayer, roadLayer, routeLayer, eventLayer].forEach((layer) => {
+    if (layer) map?.removeLayer(layer);
+  });
+
+  districtLayer = createDistrictLayer();
+  roadLayer = createRoadLayer();
+  routeLayer = createRouteLayer();
+  eventLayer = createEventLayer();
+
+  map.addLayer(districtLayer);
+  map.addLayer(roadLayer);
+  map.addLayer(routeLayer);
+  map.addLayer(eventLayer);
+  syncLayerVisibility();
+}
+
 function focusSelectedEvent() {
   const selected = props.events.find((item) => item.id === props.selectedEventId);
   if (!selected || !map) return;
 
   map.getView().animate({
     center: fromLonLat(selected.coordinate),
-    zoom: 14.2,
+    zoom: Math.max(props.zoom + 1.2, 13.7),
     duration: 450,
   });
 
@@ -224,18 +248,20 @@ function focusSelectedEvent() {
 onMounted(() => {
   if (!mapEl.value) return;
 
-  districtLayer = createDistrictLayer();
-  roadLayer = createRoadLayer();
-  routeLayer = createRouteLayer();
-  eventLayer = createEventLayer();
+  baseLayer = new TileLayer({
+    source: new OSM({
+      attributions: '© OpenStreetMap contributors',
+      crossOrigin: 'anonymous',
+    }),
+  });
 
   map = new Map({
     target: mapEl.value,
-    layers: [districtLayer, roadLayer, routeLayer, eventLayer],
+    layers: [baseLayer],
     view: new View({
       center: fromLonLat(props.center),
-      zoom: 13.2,
-      minZoom: 12,
+      zoom: props.zoom,
+      minZoom: 10,
       maxZoom: 16,
     }),
     controls: [],
@@ -250,12 +276,24 @@ onMounted(() => {
 
   resizeObserver = new ResizeObserver(() => map?.updateSize());
   resizeObserver.observe(mapEl.value);
-  syncLayerVisibility();
+  rebuildVectorLayers();
   focusSelectedEvent();
 });
 
 watch(() => props.activeLayers, syncLayerVisibility, { deep: true });
 watch(() => props.selectedEventId, focusSelectedEvent);
+watch(
+  () => [props.center, props.zoom, props.districts, props.roads, props.routes, props.events],
+  () => {
+    if (!map) return;
+
+    map.getView().setCenter(fromLonLat(props.center));
+    map.getView().setZoom(props.zoom);
+    rebuildVectorLayers();
+    focusSelectedEvent();
+  },
+  { deep: true },
+);
 
 onBeforeUnmount(() => {
   resizeObserver?.disconnect();

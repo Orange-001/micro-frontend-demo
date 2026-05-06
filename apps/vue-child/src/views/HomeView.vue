@@ -4,6 +4,23 @@
       <section class="cc-panel cc-hero">
         <p class="cc-kicker">AI Command Center</p>
         <h1>城市级 AI 指挥调度</h1>
+        <label class="cc-city-switch">
+          <span>城市</span>
+          <ElSelect
+            v-model="selectedCityId"
+            class="cc-city-select"
+            aria-label="切换城市"
+            popper-class="cc-city-select-popper"
+            :teleported="false"
+          >
+            <ElOption
+              v-for="city in cityOptions"
+              :key="city.id"
+              :label="city.name"
+              :value="city.id"
+            />
+          </ElSelect>
+        </label>
         <div class="cc-hero-grid">
           <div>
             <strong>{{ riskCounts.critical }}</strong>
@@ -76,6 +93,7 @@
         <CityMap
           :active-layers="activeLayers"
           :center="cityCenter"
+          :zoom="cityData.mapZoom"
           :districts="districtAreas"
           :events="cityEvents"
           :roads="roadSegments"
@@ -92,6 +110,9 @@
         </div>
         <DigitalTwinScene
           :buildings="dispatchBuildings"
+          :center="cityCenter"
+          :city-id="selectedCityId"
+          :osm-building-source="cityData.osmBuildings"
           :selected-building-id="selectedEvent.buildingId"
           @select-building="selectBuilding"
         />
@@ -131,10 +152,10 @@
 
       <section class="cc-panel">
         <div class="cc-section-head">
-          <h2>风险趋势</h2>
-          <span>近 50 分钟</span>
+          <h2>城市实况趋势</h2>
+          <span>Open-Meteo</span>
         </div>
-        <RiskChart :trend="riskTrend" />
+        <RiskChart :city-id="selectedCityId" :trend="riskTrend" :weather="cityData.weather" />
       </section>
 
       <section class="cc-panel">
@@ -159,24 +180,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
+import { ElOption, ElSelect } from 'element-plus/es/components/select/index';
+import 'element-plus/es/components/select/style/css';
 import AgentTimeline from '../components/command-center/AgentTimeline.vue';
 import CityMap from '../components/command-center/CityMap.vue';
 import DigitalTwinScene from '../components/command-center/DigitalTwinScene.vue';
 import RiskChart from '../components/command-center/RiskChart.vue';
-import {
-  cityCenter,
-  cityEvents,
-  dispatchBuildings,
-  districtAreas,
-  resourceMetrics,
-  responseRoutes,
-  riskTrend,
-  roadSegments,
-} from '../data/commandCenter';
-import type { DispatchLayerKey, EventStatus, RiskLevel } from '../types/commandCenter';
+import { cityOptions, commandCenterCities, defaultCityId } from '../data/commandCenter';
+import type { CityId, DispatchLayerKey, EventStatus, RiskLevel } from '../types/commandCenter';
 
-const selectedEventId = ref(cityEvents[0].id);
+const selectedCityId = ref<CityId>(defaultCityId);
+const selectedEventId = ref(commandCenterCities[defaultCityId].events[0].id);
 
 const activeLayers = reactive<Record<DispatchLayerKey, boolean>>({
   districts: true,
@@ -204,16 +219,26 @@ const statusText: Record<EventStatus, string> = {
   contained: '已控制',
 };
 
+const cityData = computed(() => commandCenterCities[selectedCityId.value]);
+const cityCenter = computed(() => cityData.value.center);
+const cityEvents = computed(() => cityData.value.events);
+const districtAreas = computed(() => cityData.value.districts);
+const roadSegments = computed(() => cityData.value.roads);
+const responseRoutes = computed(() => cityData.value.routes);
+const dispatchBuildings = computed(() => cityData.value.buildings);
+const riskTrend = computed(() => cityData.value.riskTrend);
+const resourceMetrics = computed(() => cityData.value.resources);
+
 const selectedEvent = computed(
-  () => cityEvents.find((event) => event.id === selectedEventId.value) ?? cityEvents[0],
+  () => cityEvents.value.find((event) => event.id === selectedEventId.value) ?? cityEvents.value[0],
 );
 
 const selectedBuilding = computed(() =>
-  dispatchBuildings.find((building) => building.id === selectedEvent.value.buildingId),
+  dispatchBuildings.value.find((building) => building.id === selectedEvent.value.buildingId),
 );
 
 const riskCounts = computed(() =>
-  cityEvents.reduce(
+  cityEvents.value.reduce(
     (acc, event) => {
       acc[event.severity] += 1;
       return acc;
@@ -231,11 +256,15 @@ function selectEvent(id: string) {
 }
 
 function selectBuilding(id: string) {
-  const event = cityEvents.find((item) => item.buildingId === id);
+  const event = cityEvents.value.find((item) => item.buildingId === id);
   if (event) selectEvent(event.id);
 }
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat('zh-CN').format(value);
 }
+
+watch(selectedCityId, (cityId) => {
+  selectedEventId.value = commandCenterCities[cityId].events[0].id;
+});
 </script>

@@ -6,6 +6,13 @@ export type AgentStepStatus = 'done' | 'running' | 'waiting';
 
 export type DispatchLayerKey = 'districts' | 'roads' | 'routes' | 'events';
 
+export type CityId = 'guangzhou' | 'shenzhen';
+
+export interface CityOption {
+  id: CityId;
+  name: string;
+}
+
 export interface DistrictArea {
   id: string;
   name: string;
@@ -31,9 +38,13 @@ export interface DispatchBuilding {
   name: string;
   type: 'command' | 'transit' | 'energy' | 'medical' | 'security' | 'storage';
   status: RiskLevel;
-  position: [number, number];
-  size: [number, number];
-  height: number;
+  coordinate: [number, number];
+  footprint?: Array<[number, number]>;
+  heightMeters: number;
+  position?: [number, number];
+  size?: [number, number];
+  height?: number;
+  source: string;
 }
 
 export interface AgentStep {
@@ -76,4 +87,38 @@ export interface ResourceMetric {
   name: string;
   value: number;
   capacity: number;
+}
+
+export interface WeatherProfile {
+  latitude: number;
+  longitude: number;
+  label: string;
+}
+
+export interface WeatherTrendPoint {
+  time: string;
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
+}
+
+export interface OsmBuildingSource {
+  bbox: [number, number, number, number];
+  label: string;
+}
+
+export interface CommandCenterData {
+  id: CityId;
+  name: string;
+  center: [number, number];
+  mapZoom: number;
+  osmBuildings: OsmBuildingSource;
+  weather: WeatherProfile;
+  districts: DistrictArea[];
+  roads: RoadSegment[];
+  routes: ResponseRoute[];
+  buildings: DispatchBuilding[];
+  events: CityEvent[];
+  riskTrend: RiskTrendPoint[];
+  resources: ResourceMetric[];
 }

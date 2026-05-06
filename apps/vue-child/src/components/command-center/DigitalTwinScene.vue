@@ -6,9 +6,17 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { DispatchBuilding, RiskLevel } from '../../types/commandCenter';
+import type {
+  CityId,
+  DispatchBuilding,
+  OsmBuildingSource,
+  RiskLevel,
+} from '../../types/commandCenter';
 
 const props = defineProps<{
+  cityId: CityId;
+  center: [number, number];
+  osmBuildingSource: OsmBuildingSource;
   buildings: DispatchBuilding[];
   selectedBuildingId: string;
 }>();
@@ -17,6 +25,27 @@ const emit = defineEmits<{
   selectBuilding: [id: string];
 }>();
 
+interface OSMGeometryPoint {
+  lat: number;
+  lon: number;
+}
+
+interface OSMElement {
+  id: number;
+  tags?: Record<string, string>;
+  geometry?: OSMGeometryPoint[];
+}
+
+interface OSMResponse {
+  elements?: OSMElement[];
+}
+
+interface ContextBuilding {
+  id: string;
+  footprint: Array<[number, number]>;
+  heightMeters: number;
+}
+
 const sceneEl = ref<HTMLDivElement | null>(null);
 
 let scene: THREE.Scene | null = null;
@@ -24,16 +53,25 @@ let camera: THREE.PerspectiveCamera | null = null;
 let renderer: THREE.WebGLRenderer | null = null;
 let controls: OrbitControls | null = null;
 let resizeObserver: ResizeObserver | null = null;
+let landmarkGroup: THREE.Group | null = null;
+let osmGroup: THREE.Group | null = null;
 let frameId = 0;
 let beacon: THREE.Mesh | null = null;
 let routeLine: THREE.Line | null = null;
 let fallbackCanvas: HTMLCanvasElement | null = null;
 let fallbackContext: CanvasRenderingContext2D | null = null;
+let osmRequestId = 0;
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
-const buildingMeshes = new Map<string, THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>>();
+const buildingMeshes = new Map<
+  string,
+  THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>
+>();
 const fallbackHitBoxes = new Map<string, DOMRect>();
+
+const sceneMeterScale = 0.004;
+const heightScale = 0.006;
 
 const riskColorMap: Record<RiskLevel, number> = {
   critical: 0xef4444,
@@ -41,35 +79,145 @@ const riskColorMap: Record<RiskLevel, number> = {
   normal: 0x22c55e,
 };
 
+function getMetersPerDegreeLon() {
+  return 111_320 * Math.cos((props.center[1] * Math.PI) / 180);
+}
+
+function projectCoordinate([lon, lat]: [number, number]) {
+  return {
+    x: (lon - props.center[0]) * getMetersPerDegreeLon() * sceneMeterScale,
+    z: -(lat - props.center[1]) * 111_320 * sceneMeterScale,
+  };
+}
+
+function getBuildingHeight(building: Pick<DispatchBuilding, 'height' | 'heightMeters'>) {
+  return Math.max(0.22, Math.min(4.3, building.height ?? building.heightMeters * heightScale));
+}
+
 function getBuildingColor(building: DispatchBuilding) {
   if (building.id === props.selectedBuildingId) return 0x38bdf8;
   return riskColorMap[building.status];
 }
 
-function createBuilding(building: DispatchBuilding) {
-  const geometry = new THREE.BoxGeometry(building.size[0], building.height, building.size[1]);
+function createFootprintGeometry(footprint: Array<[number, number]>, height: number) {
+  const uniqueFootprint = footprint.filter((point, index) => {
+    const next = footprint[index + 1];
+    return !next || point[0] !== next[0] || point[1] !== next[1];
+  });
+  const projected = uniqueFootprint.map(projectCoordinate);
+  const center = projected.reduce((acc, point) => ({ x: acc.x + point.x, z: acc.z + point.z }), {
+    x: 0,
+    z: 0,
+  });
+  center.x /= Math.max(projected.length, 1);
+  center.z /= Math.max(projected.length, 1);
+
+  const shape = new THREE.Shape();
+  projected.forEach((point, index) => {
+    const x = point.x - center.x;
+    const y = -(point.z - center.z);
+    if (index === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  });
+  shape.closePath();
+
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: height,
+    bevelEnabled: false,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  geometry.computeVertexNormals();
+
+  return {
+    geometry,
+    position: new THREE.Vector3(center.x, 0, center.z),
+  };
+}
+
+function getBuildingScenePosition(building: DispatchBuilding) {
+  const point = building.coordinate ? projectCoordinate(building.coordinate) : { x: 0, z: 0 };
+  return new THREE.Vector3(point.x, 0, point.z);
+}
+
+function disposeMaterial(material: THREE.Material | THREE.Material[]) {
+  if (Array.isArray(material)) {
+    material.forEach((item) => item.dispose());
+    return;
+  }
+
+  material.dispose();
+}
+
+function clearGroup(group: THREE.Group | null) {
+  if (!group) return;
+
+  group.traverse((object) => {
+    const mesh = object as THREE.Mesh<THREE.BufferGeometry, THREE.Material | THREE.Material[]>;
+    mesh.geometry?.dispose();
+    if (mesh.material) disposeMaterial(mesh.material);
+  });
+  group.clear();
+}
+
+function createLandmarkBuilding(building: DispatchBuilding) {
+  if (!landmarkGroup) return;
+
+  const height = getBuildingHeight(building);
+  const footprintResult = building.footprint?.length
+    ? createFootprintGeometry(building.footprint, height)
+    : null;
+  const geometry =
+    footprintResult?.geometry ??
+    new THREE.BoxGeometry(building.size?.[0] ?? 0.9, height, building.size?.[1] ?? 0.9);
   const material = new THREE.MeshStandardMaterial({
     color: getBuildingColor(building),
-    roughness: 0.45,
-    metalness: 0.16,
+    roughness: 0.48,
+    metalness: 0.18,
     emissive: building.status === 'critical' ? 0x4a0f0f : 0x000000,
-    emissiveIntensity: building.status === 'critical' ? 0.45 : 0.12,
+    emissiveIntensity: building.status === 'critical' ? 0.42 : 0.12,
   });
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(building.position[0], building.height / 2, building.position[1]);
+
+  if (footprintResult) {
+    mesh.position.copy(footprintResult.position);
+  } else {
+    const position = getBuildingScenePosition(building);
+    mesh.position.set(position.x, height / 2, position.z);
+  }
+
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.userData.buildingId = building.id;
 
   const edge = new THREE.LineSegments(
     new THREE.EdgesGeometry(geometry),
-    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 }),
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2 }),
   );
   edge.position.copy(mesh.position);
 
-  scene?.add(mesh);
-  scene?.add(edge);
+  landmarkGroup.add(mesh);
+  landmarkGroup.add(edge);
   buildingMeshes.set(building.id, mesh);
+}
+
+function createContextBuilding(building: ContextBuilding) {
+  if (!osmGroup || building.footprint.length < 3) return;
+
+  const height = Math.max(0.12, Math.min(1.8, building.heightMeters * heightScale));
+  const { geometry, position } = createFootprintGeometry(building.footprint, height);
+  const mesh = new THREE.Mesh(
+    geometry,
+    new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      roughness: 0.72,
+      metalness: 0.08,
+      transparent: true,
+      opacity: 0.58,
+    }),
+  );
+  mesh.position.copy(position);
+  mesh.receiveShadow = true;
+  osmGroup.add(mesh);
 }
 
 function updateRouteLine() {
@@ -80,12 +228,12 @@ function updateRouteLine() {
   if (routeLine) {
     scene.remove(routeLine);
     routeLine.geometry.dispose();
+    disposeMaterial(routeLine.material);
   }
 
-  const points = [
-    new THREE.Vector3(command.position[0], 0.08, command.position[1]),
-    new THREE.Vector3(selected.position[0], 0.08, selected.position[1]),
-  ];
+  const start = getBuildingScenePosition(command);
+  const end = getBuildingScenePosition(selected);
+  const points = [new THREE.Vector3(start.x, 0.08, start.z), new THREE.Vector3(end.x, 0.08, end.z)];
   routeLine = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints(points),
     new THREE.LineDashedMaterial({ color: 0x38bdf8, dashSize: 0.5, gapSize: 0.24 }),
@@ -98,7 +246,8 @@ function updateBeacon() {
   const selected = props.buildings.find((item) => item.id === props.selectedBuildingId);
   if (!scene || !selected || !beacon) return;
 
-  beacon.position.set(selected.position[0], selected.height + 0.6, selected.position[1]);
+  const position = getBuildingScenePosition(selected);
+  beacon.position.set(position.x, getBuildingHeight(selected) + 0.55, position.z);
   const material = beacon.material as THREE.MeshBasicMaterial;
   material.color.setHex(riskColorMap[selected.status]);
 }
@@ -121,13 +270,97 @@ function updateBuildingMaterials() {
     mesh.material.emissiveIntensity = selected
       ? 0.55
       : building.status === 'critical'
-        ? 0.45
+        ? 0.42
         : 0.12;
-    mesh.scale.set(selected ? 1.08 : 1, selected ? 1.03 : 1, selected ? 1.08 : 1);
   });
 
   updateBeacon();
   updateRouteLine();
+}
+
+function rebuildLandmarks() {
+  if (!renderer || !scene) {
+    drawFallbackScene();
+    return;
+  }
+
+  if (landmarkGroup) {
+    scene.remove(landmarkGroup);
+    clearGroup(landmarkGroup);
+  }
+
+  buildingMeshes.clear();
+  landmarkGroup = new THREE.Group();
+  scene.add(landmarkGroup);
+  props.buildings.forEach(createLandmarkBuilding);
+  updateBuildingMaterials();
+  loadOsmBuildings();
+}
+
+function parseHeightMeters(element: OSMElement) {
+  const height = element.tags?.height?.replace(',', '.').match(/\d+(\.\d+)?/)?.[0];
+  if (height) return Number(height);
+
+  const levels = Number(element.tags?.['building:levels']);
+  if (Number.isFinite(levels) && levels > 0) return levels * 3.2;
+
+  return 18 + (element.id % 9) * 4;
+}
+
+async function fetchOsmBuildings(source: OsmBuildingSource) {
+  const [south, west, north, east] = source.bbox;
+  const query = `[out:json][timeout:8];way["building"](${south},${west},${north},${east});out tags geom 90;`;
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 9_000);
+
+  try {
+    const response = await fetch(
+      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+      { signal: controller.signal },
+    );
+    if (!response.ok) throw new Error(`Overpass ${response.status}`);
+
+    const data = (await response.json()) as OSMResponse;
+    return (data.elements ?? [])
+      .filter((element) => (element.geometry?.length ?? 0) >= 3)
+      .slice(0, 90)
+      .map<ContextBuilding>((element) => ({
+        id: `osm-${element.id}`,
+        footprint: element.geometry!.map((point) => [point.lon, point.lat]),
+        heightMeters: parseHeightMeters(element),
+      }));
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+async function loadOsmBuildings() {
+  if (!renderer || !scene) return;
+
+  const requestId = ++osmRequestId;
+  if (osmGroup) {
+    scene.remove(osmGroup);
+    clearGroup(osmGroup);
+  }
+
+  osmGroup = new THREE.Group();
+  scene.add(osmGroup);
+
+  try {
+    const buildings = await fetchOsmBuildings(props.osmBuildingSource);
+    if (requestId !== osmRequestId) return;
+    buildings.forEach(createContextBuilding);
+  } catch {
+    if (requestId !== osmRequestId || !osmGroup) return;
+    props.buildings.forEach((building) => {
+      if (!building.footprint) return;
+      createContextBuilding({
+        id: `fallback-${building.id}`,
+        footprint: building.footprint,
+        heightMeters: building.heightMeters,
+      });
+    });
+  }
 }
 
 function resizeRenderer() {
@@ -231,16 +464,19 @@ function drawFallbackScene() {
     ctx.stroke();
   }
 
-  const toScreen = (position: [number, number]) => ({
-    x: width / 2 + position[0] * scale,
-    y: height * 0.58 + position[1] * scale * 0.56,
-  });
+  const toScreen = (building: DispatchBuilding) => {
+    const position = getBuildingScenePosition(building);
+    return {
+      x: width / 2 + position.x * scale * 0.12,
+      y: height * 0.58 + position.z * scale * 0.08,
+    };
+  };
 
   const command = props.buildings.find((item) => item.type === 'command');
   const selected = props.buildings.find((item) => item.id === props.selectedBuildingId);
   if (command && selected) {
-    const start = toScreen(command.position);
-    const end = toScreen(selected.position);
+    const start = toScreen(command);
+    const end = toScreen(selected);
     ctx.setLineDash([8, 6]);
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 2;
@@ -253,13 +489,13 @@ function drawFallbackScene() {
 
   props.buildings
     .slice()
-    .sort((a, b) => a.position[1] - b.position[1])
+    .sort((a, b) => getBuildingScenePosition(a).z - getBuildingScenePosition(b).z)
     .forEach((building) => {
       const selectedBuilding = building.id === props.selectedBuildingId;
-      const point = toScreen(building.position);
-      const blockWidth = building.size[0] * scale * 0.72;
-      const blockDepth = building.size[1] * scale * 0.42;
-      const blockHeight = building.height * scale * 0.34;
+      const point = toScreen(building);
+      const blockWidth = Math.max(28, (building.size?.[0] ?? 1.1) * scale * 0.9);
+      const blockDepth = Math.max(16, (building.size?.[1] ?? 0.8) * scale * 0.52);
+      const blockHeight = getBuildingHeight(building) * scale * 0.34;
       const color = selectedBuilding
         ? '#38bdf8'
         : `#${riskColorMap[building.status].toString(16).padStart(6, '0')}`;
@@ -363,8 +599,7 @@ onMounted(() => {
   beacon.rotation.x = Math.PI / 2;
   scene.add(beacon);
 
-  props.buildings.forEach(createBuilding);
-  updateBuildingMaterials();
+  rebuildLandmarks();
   resizeRenderer();
 
   resizeObserver = new ResizeObserver(resizeRenderer);
@@ -374,18 +609,26 @@ onMounted(() => {
 });
 
 watch(() => props.selectedBuildingId, updateBuildingMaterials);
+watch(
+  () => [props.cityId, props.center, props.osmBuildingSource, props.buildings],
+  rebuildLandmarks,
+  { deep: true },
+);
 
 onBeforeUnmount(() => {
+  osmRequestId += 1;
   cancelAnimationFrame(frameId);
   sceneEl.value?.removeEventListener('pointerdown', handlePointerDown);
   resizeObserver?.disconnect();
   controls?.dispose();
   renderer?.dispose();
-  buildingMeshes.forEach((mesh) => {
-    mesh.geometry.dispose();
-    mesh.material.dispose();
-  });
+  clearGroup(landmarkGroup);
+  clearGroup(osmGroup);
   buildingMeshes.clear();
+  if (routeLine) {
+    routeLine.geometry.dispose();
+    disposeMaterial(routeLine.material);
+  }
   if (renderer?.domElement.parentNode) {
     renderer.domElement.parentNode.removeChild(renderer.domElement);
   }
