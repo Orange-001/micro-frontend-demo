@@ -30,4 +30,5 @@ yarn-debug.log*
 test-results/
 playwright.config.js
 
-
+# md
+study.md

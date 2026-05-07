@@ -227,7 +227,27 @@
     setTimeout
     ```
 3. requestAnimationFrame、requestIdleCallback、setTimeout 的区别是什么？
+  - requestAnimationFrame(fn) 会在浏览器下一帧绘制前执行，适合做动画，减少重绘
+  - requestIdleCallback(fn, {timeout: number}?) 会在浏览器主线程空闲时执行，适合做一些低优先级任务，比如埋点上报、预加载、拆分长任务等。不适合处理必须马上完成的逻辑，因为如果浏览器一直很忙，回调可能迟迟不执行。可以传 timeout 兜底。
+  - setTimeout(fn, delay) 表示至少等待 delay 毫秒后，把回调放入宏任务队列。时间可能延后
+    - 延后的常见原因：
+      - 主线程正在执行同步代码，任务队列里的回调只能等它执行完。
+      - 当前宏任务后面还要处理微任务，比如 Promise.then、queueMicrotask。
+      - 浏览器对嵌套定时器、后台标签页会做节流。
+      - 页面渲染、事件处理、JS 执行都共享主线程，主线程忙时回调就会排队。
+  - React shouldYield 函数的实现原理是什么？
+    - 示例
+      ```ts
+      function shouldYield() {
+        return performance.now() - startTime >= frameInterval;
+      }
+      ```
+    - 为什么不用 requestIdleCallback？
+      React Scheduler 要做的不只是“空闲时执行”，还要支持：不同优先级任务、任务过期、可中断、可恢复、高优先级任务插队
 4. 浏览器从输入 URL 到页面展示发生了什么？
+  - 解析URL（协议、域名、端口等）-> DNS解析（获取IP地址）-> TCP 三次握手 -> HTTP 请求-> 解析 HTML 构建 DOM 树和 CSS 树，遇到外部资源发起请求 -> 构建Render树 -> 绘制页面（布局（重排）、绘制（重绘）、合成）
+  - 遇到script脚本会阻塞HTML解析，defer（等DOM解析完成后按顺序执行）和async（下载完立即执行，执行顺序不固定）可以优化。
+  - 遇到CSS会阻塞渲染，因为需要计算样式。
 5. V8 垃圾回收机制是什么？前端常见内存泄漏场景有哪些？
 6. 原型链、作用域链、闭包、this 绑定分别解决什么问题？
 7. Promise.all、Promise.allSettled、Promise.race、Promise.any 有什么区别？
