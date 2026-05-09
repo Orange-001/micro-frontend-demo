@@ -281,15 +281,63 @@
 
 # Vue
 1. Vue 3 响应式原理是什么？reactive、ref、effect 如何配合依赖收集？
+  - 用Proxy代理拦截对象读写，读取时（get）收集依赖（track），修改时(set)触发依赖更新(trigger)。effect（副作用，用来保存“依赖了响应式数据的函数”）
 2. Vue 2 和 Vue 3 响应式实现有什么差异？
+  - Vue 2 基于 Object.defineProperty，Vue 3 基于 Proxy
+  - Vue 2 用 Object.defineProperty 劫持每个属性，所以无法天然监听新增属性、删除属性、数组索引和 length 变化，需要 Vue.set、Vue.delete 和重写数组方法补能力。
 3. computed 和 watch 的区别是什么？computed 为什么有缓存？
+  - computed 用来计算派生状态，有返回值、有缓存，依赖不变不会重复计算。
+  - watch 用来监听变化并执行副作用，适合异步请求、日志、缓存、DOM 操作等。
+  - computed缓存原理
+    - 第一次读取 .value，执行 getter，计算结果并缓存
+    - 后续再次读取，如果依赖没变，直接返回缓存值
+    - 当依赖变化时，不会马上重新计算，只是把 dirty 标记为 true
+    - 下一次读取 .value 时，才重新计算
 4. Vue 组件更新流程是什么？nextTick 的原理是什么？
+  - 组件更新流程：
+    - Vue 组件渲染本质上是一个响应式 effect。组件 render 时读取响应式数据完成依赖收集；数据变化后触发 trigger，找到组件的 render effect，但不会立即同步执行，而是把组件更新任务放入 scheduler 队列。Vue 会在同一轮事件循环内合并多次更新，通过微任务统一 flush 队列，重新 render 生成新 vnode，再通过 patch 对比新旧vnode，更新真实 DOM。
+  - nextTick
+    - 等待 Vue 本轮 DOM 更新完成后，再执行回调
+    - 因为 Vue 更新 DOM 是异步批量执行的。你修改数据后，DOM 不会马上同步更新，而是进入更新队列。
+    - nextTick 本质上是把回调放到当前更新队列刷新之后执行
+    - 通过Promise.then（或其他降级处理方案，如setTimeout）等实现
 5. Vue Diff 算法的核心策略是什么？
+  - 核心目标：在新旧 vnode 对比时，尽量复用已有 DOM，最小化 DOM 创建、删除和移动
+  - 策略：同层比较 -> 双端比较 -> 处理中间乱序节点 -> key index映射复用节点 -> 最长递增子序列减少移动
+    - 如果用 index 作为 key，当列表插入、删除、排序时，Vue 可能错误复用节点，导致组件状态、输入框内容等错乱
 6. keep-alive 的原理和使用场景是什么？
+  - 缓存组件实例，避免组件在切换时被反复销毁和重建
+  - include / exclude 匹配的是组件的 name
+  - max可以限制最多缓存多少个组件，超过数量后，会按照 LRU （最近最少使用）策略移除最久未使用的缓存组件
 7. Vue 组件通信方式有哪些？大型项目中如何选择？
+  - Vue 组件通信主要有 props/emit、v-model、provide/inject、Pinia、ref/defineExpose、slots、路由参数和事件总线。大型项目中，父子通信优先 props + emit，跨层级组件上下文用 provide/inject，全局业务状态用 Pinia，页面状态用路由参数，事件总线只用于少量全局事件，避免滥用
 8. Pinia 和 Vuex 的区别是什么？如何设计大型业务模块的状态管理？
+  - pinia: state/getters/actions，轻量化，TS友好。
+  - vuex: state/getters/mutations/actions
 9. Vue 项目性能优化手段有哪些？
+  - 加载性能
+    - 路由懒加载、组件懒加载、减少首屏包体积（拆包、按需引入、静态资源延迟加载）
+  - 渲染性能
+    - v-for使用稳定key
+    - 合理使用computed
+  - 响应式优化
+    - 大对象使用shallowRef、shallowReactive
+  - 组件层面优化
+    - 拆分组件，让更新范围更小
+    - keep-alive缓存
+  - 事件和副作用优化
+    - 节流和防抖
+  - 网络和接口优化
+    - 分页加载、并发请求
+  - 资源优化
+    - 图片懒加载、CDN
+  - 构建优化
+    - 代码分割、分析 bundle、gzip压缩、合理拆分 vendor chunk
+  - 监控定位
+    - Chrome Performance、Lighthouse定位瓶颈
 10. Vue 项目中如何做权限控制、路由守卫和动态菜单？
+  - 登录拿 token → 获取用户信息和权限 → 根据权限生成动态路由（addRoute） → 注册路由 → 根据路由生成菜单 → 路由守卫控制访问 → 按钮级权限做细粒度控制（app.directive， v-permission）
+  - beforeEach 常用于登录和权限控制，afterEach 用于跳转后的标题和埋点，beforeEnter 用于单个路由控制，组件内的 beforeRouteUpdate 和 beforeRouteLeave 常用于参数变化刷新和离开页面确认
 
 # React
 1. React Fiber 架构为什么能中断、恢复和调度？
