@@ -341,15 +341,84 @@
 
 # React
 1. React Fiber 架构为什么能中断、恢复和调度？
+  - React Fiber 能中断、恢复和调度，是因为它把组件树渲染从递归调用改成了基于 Fiber 节点的链表遍历。每个 Fiber 是一个工作单元，React 处理完一个单元后可以通过 shouldYield 判断是否让出主线程。中断时当前进度保存在 workInProgress 指针和 Fiber 树上，之后可以继续执行。同时 Fiber 上记录了更新优先级，React 可以根据 lanes 调度不同优先级任务，高优先级任务可以打断低优先级任务。但真正操作 DOM 的 commit 阶段不能中断。
+  - 详解
+    - 首次渲染，构建根Fiber，current树，此时没有alternate（current和workInProgress的Fiber之间的互相引用，方便复用）
+    - 更新渲染，构建 workInProgress 树，如果alternate 存在，则复用，否则wip alternate = current , current alternate = wip。
+    - React 通过比较 props/state/context 和 lanes/childLanes 判断某个 Fiber 是否需要重新执行组件函数
+  - setState之后的过程
+    - 用户调用 setState → React 把更新放进队列 → 标记优先级 → 从根节点调度 → 构建 WIP 树 → 重新执行组件 → 标记副作用 → commit 更新 DOM
+    - 示例
+        ```text
+        setState()
+          ↓
+        创建 Update 对象
+          ↓
+        加入 Hook/State 更新队列
+          ↓
+        计算 Lane（优先级）
+          ↓
+        向上冒泡标记 lanes
+          ↓
+        scheduleUpdateOnFiber()
+          ↓
+        ensureRootIsScheduled()
+          ↓
+        render 阶段（构建 WIP 树）
+          ↓
+        beginWork()
+          ↓
+        重新执行组件函数
+          ↓
+        diff 子节点
+          ↓
+        completeWork()
+          ↓
+        收集副作用 flags
+          ↓
+        commit 阶段
+          ↓
+        更新 DOM
+          ↓
+        执行 useLayoutEffect
+          ↓
+        浏览器绘制
+          ↓
+        执行 useEffect
+        ```
 2. React Diff 算法的核心策略是什么？
+  - 找出哪些节点可以复用，哪些需要新增、删除、移动或更新
+  - 同层比较。节点 type 不同直接销毁重建；type 相同则复用节点并更新 props；列表通过 key 判断节点身份，key 和 type 都相同才能复用。数组 diff 时 React 先顺序比较，遇到不匹配后把剩余旧节点放进 Map，再用新节点的 key 或 index 查找可复用节点，并通过 lastPlacedIndex 判断是否需要移动。React 不使用 Vue 那样的最长递增子序列优化，所以列表重排时可能产生更多移动。
 3. useEffect 和 useLayoutEffect 有什么区别？
+  - react更新机制：render阶段->commit阶段：更新DOM->useLayoutEffect->浏览器绘制->useEffect
+  - useLayoutEffect：DOM 更新后、浏览器绘制前执行。会阻塞浏览器绘制，导致首屏卡顿变慢，适合在绘制前同步读取或修改布局的场景：读取 DOM 尺寸、计算元素位置、避免页面闪烁、同步调整滚动位置
+  - useEffect：浏览器绘制后异步执行。适合普通副作用：请求数据、订阅事件、定时器、日志上报、手动调用非布局相关 API
 4. Hooks 为什么不能写在条件语句或循环里？
+  - 因为 React 通过 Hook 的调用顺序来匹配每个 Hook 对应的状态和副作用。函数组件每次 render 都会重新执行，React 会按顺序读取 Hook 链表。如果某次 render 因为条件或循环导致 Hook 调用数量或顺序变化，后续 Hook 就会和上一次的状态对应错位。因此 Hook 必须写在函数组件或自定义 Hook 的顶层，条件逻辑应该写在 Hook 内部
 5. React 闭包陷阱和状态更新陷阱如何处理？
+  - React 的闭包陷阱是因为函数组件每次 render 都会生成新的变量和函数，异步回调、定时器、事件监听可能捕获某次旧 render 的 state。处理方式是依赖数组写完整、用函数式更新 setState(prev => next)，或者用 useRef 保存最新值。状态更新陷阱主要包括连续 setState(count + 1) 只生效一次、setState 后立刻读到旧值、直接修改对象数组导致引用不变。解决方式是使用函数式更新、在 useEffect 里监听更新后的值，并保持不可变更新。
 6. React.memo、useMemo、useCallback 分别适合什么场景？
+  - React.memo 用来缓存组件，当 props 浅比较不变时跳过子组件渲染，适合复杂子组件、列表项、表格行等。useMemo 用来缓存计算结果，适合昂贵计算，或者给 memo 子组件传递稳定的对象、数组。useCallback 用来缓存函数引用，适合把函数传给 memo 子组件、作为 effect 依赖或传给第三方库。三者不要滥用，只有当渲染成本高、引用稳定性影响子组件渲染，或者计算开销明显时才使用。
 7. 受控组件和非受控组件有什么区别？
+  - 受控组件是表单值由 React state 管理，value 绑定 state，onChange 更新 state，适合校验、联动、格式化等复杂表单。非受控组件是表单值由 DOM 自己管理，React 通过 defaultValue 设置初始值，需要时用 ref 读取，适合简单表单、文件上传或接入第三方库。核心区别就是数据源在 React state 还是 DOM。
 8. React 并发特性对复杂前端应用有什么价值？
+  - 并发不是多线程，而是可中断、恢复、优先级调度等。防止阻塞用户操作，提升用户体验
 9. React 中如何优化长列表、复杂表单和高频更新？
+  - 长列表：虚拟滚动
+  - 复杂表单：一个字段变化，不要让整个表单都重渲染。例如不要所有字段都依赖一个大对象，每次修改一个字段，父组件和所有子字段都可能更新。
+  - 高频更新：节流、防抖、降低优先级、webWorker
 10. React 项目中如何设计可维护的状态管理方案？
+  - 核心不是“选哪个库”，而是先把状态分层：本地状态留在组件内，共享状态放到合适边界，服务端状态交给请求缓存库，全局状态只放真正跨页面共享的业务状态
+11. React的批处理原理
+  - React 批处理的原理是：setState 时不立即渲染，而是创建 update 放进 Fiber 的 updateQueue，并标记 lane 优先级。在 React 事件或 React 18 自动批处理上下文中，多次更新会先入队，等当前上下文结束后统一调度 render，所以多次 setState 通常只触发一次渲染。
+  - Hook 的更新队列类似环形链表，render 时按顺序计算新 state。React 18 使用 createRoot 后，Promise、setTimeout、原生事件等异步场景也会自动批处理。
+  - 需要立即更新 DOM 时可以用 flushSync，但应谨慎使用。
+12. Redux原理
+  - Redux 的原理是单向数据流。应用状态统一保存在 store 中，组件通过 dispatch 发送 action，store 调用 reducer，根据旧 state 和 action 计算新 state，然后通知 subscribe 的监听器更新视图。reducer 必须是纯函数，不能直接修改原 state。middleware 通过包装 dispatch 扩展能力，比如处理异步、日志和埋点。React-Redux 通过 Provider 把 store 放进 Context，通过 useSelector 订阅 store 并选择组件需要的 state，选中值变化时触发组件重新渲染。
+13. immer的原理？
+  - Proxy 代理原对象、记录你做了哪些修改、只复制被修改过的对象路径、最后生成新的不可变 state
+14. useState、useReducer、useContext、useMemo、useCallback 原理？
+  - React Hooks 的底层依赖 Fiber。每个函数组件对应一个 Fiber，Fiber 的 memoizedState 上保存一条 Hook 链表，React 按 Hook 调用顺序找到对应 Hook。useState 和 useReducer 都通过 Hook 的 updateQueue 保存更新，下一次 render 时依次计算新 state；useState 本质是内置 reducer 的 useReducer。useContext 在 render 时读取最近 Provider 的值，Provider value 变化会让消费者更新。useMemo 在 Hook 中保存 [value, deps]，依赖没变返回缓存值；useCallback 本质是缓存函数引用，等价于 useMemo(() => fn, deps)。这也是 Hooks 不能写在条件或循环里的原因，因为调用顺序一变，Hook 链表就会对应错位。
 
 # TypeScript
 1. interface 和 type 有什么区别？分别适合什么场景？
