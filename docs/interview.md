@@ -278,6 +278,30 @@
   - CommonJS：运行时加载、同步执行、导出对象，适合传统 Node.js 环境
 9. 深拷贝和浅拷贝的区别？
   - 浅拷贝只复制第一层引用，神拷贝递归复制所有层级，区别在于是否共享内存地址。
+10. 跨域的解决方案有哪些？
+  - 浏览器安全策略。协议、域名、端口号任一不同。
+  - 解决方案
+    - CORS：服务端设置响应头 Access-Control-Allow-Origin。最推荐。
+    - 开发环境代理，相当于起一个后台服务器，代理请求。
+    - 生产环境用nginx设置反向代理。
+    - JSONP: <script>标签不受同源策略影响，但只支持GET
+11. LocalStorage 和 SessionStorage、Cookie 的区别？
+    - localStorage：长期存储，除非主动清除。（～5M）
+    - sessionStorage：会话级存储，页面标签页关闭后清除。（～5M）
+    - Cookie：会随请求自动发送给服务端，常用于登录态、服务端识别用户。（～4KB）。Cookie 通常由服务端通过 Set-Cookie 响应头设置，也可以前端用 document.cookie 设置
+12. 讲讲this的指向？
+  - this 的指向取决于函数调用方式，不取决于定义位置。普通函数直接调用是默认绑定，严格模式下是 undefined；作为对象方法调用是隐式绑定，this 指向调用对象；用 call/apply/bind 是显式绑定；用 new 调用时指向新对象，且优先级最高。箭头函数没有自己的 this，它捕获定义时外层作用域的 this，不能被 call/apply/bind 改变
+13. 讲讲new 操作符的原理？
+  ```text
+  1. 创建一个空对象
+  2. 把空对象的原型指向构造函数的 prototype
+  3. 用这个对象作为 this 执行构造函数
+  4. 如果构造函数返回对象，则返回该对象；否则返回新创建的对象
+  ```
+14. 数组去重
+15. 排序
+16. js的数据类型？类型判断？
+17. call、apply、bind的区别？
 
 # Vue
 1. Vue 3 响应式原理是什么？reactive、ref、effect 如何配合依赖收集？
@@ -338,6 +362,11 @@
 10. Vue 项目中如何做权限控制、路由守卫和动态菜单？
   - 登录拿 token → 获取用户信息和权限 → 根据权限生成动态路由（addRoute） → 注册路由 → 根据路由生成菜单 → 路由守卫控制访问 → 按钮级权限做细粒度控制（app.directive， v-permission）
   - beforeEach 常用于登录和权限控制，afterEach 用于跳转后的标题和埋点，beforeEnter 用于单个路由控制，组件内的 beforeRouteUpdate 和 beforeRouteLeave 常用于参数变化刷新和离开页面确认
+11. provide/inject的原理是？
+  - provide/inject 的原理是基于组件实例的 provides 对象和原型链查找。父组件 provide 时把值挂到当前实例的 provides 上；子组件 inject 时从父组件的 provides 查找 key。Vue 为了避免污染父级，组件第一次 provide 时会创建一个新对象，并让它的原型指向父级 provides，所以查找天然支持就近原则。provide/inject 本身不保证响应式，如果传的是 ref 或 reactive，后代拿到同一个响应式对象才会更新
+12. v-if和v-show的区别？
+  - v-if 会销毁和重建 DOM 元素
+  - v-show 执行的是display:none/block的CSS切换，不管初始条件，始终渲染元素。
 
 # React
 1. React Fiber 架构为什么能中断、恢复和调度？
@@ -437,6 +466,8 @@
   - as const 用来保留字面量类型并把对象、数组变成只读；typeof 在类型语境里可以从变量提取类型；keyof 可以拿到对象类型的 key 联合；infer 用在条件类型中，用来推断并提取类型的一部分，比如数组元素、函数参数、函数返回值、Promise 内部值
 9. 如何封装一个类型安全的事件总线？
 10. 如何降低大型 TypeScript 项目的类型复杂度和编译成本？
+11. 如何提取组件类型？
+  - InstanceType<typeof Component>
 
 # 工程化
 1. Vite 为什么开发环境比 Webpack 快？
@@ -454,6 +485,19 @@
   - 代码规范检查、TypeScript 类型检查、单元测试、核心 E2E、生产构建、包体积检查、依赖安全扫描、环境变量校验和部署后的冒烟测试
 9. 如何设计组件库的构建、文档、测试和发布流程？
 10. 如何做前端灰度发布、回滚和线上问题追踪？
+11. pnpm和npm、yarn的区别？
+  - pnpm的依赖不会放到每个项目里，而是放到全局内容寻址仓库，再通过硬链接/符号链接组织到项目的node_modules中。不允许访问未声明的依赖，不容易产生幽灵依赖的问题。
+  - 内容寻址
+    - 内容相同 -> hash 相同 -> 复用同一份文件
+  - 硬链接/符号链接
+    - 硬链接：硬链接是多个文件路径指向同一份磁盘内容。删除源文件，另一个硬链接仍可用。硬链接不是指向内存地址（运行时），而是多个文件名指向同一个 inode；inode 再记录文件数据在磁盘上的位置。
+    - 符号链接（软链接）：一个路径指向另一个路径。删除源文件，符号链接会失效。
+    - 示例
+      ```text
+        全局 store：真正的包文件
+        .pnpm 目录：用硬链接引用 store 文件
+        node_modules 顶层：用符号链接暴露项目直接依赖
+      ```
 
 # 性能优化
 1. 首屏性能优化完整链路是什么？
@@ -486,6 +530,7 @@
 3. 浏览器跨域原理是什么？CORS 预检请求什么时候发生？
 4. CDN 缓存策略如何设计？
 5. 大文件上传、断点续传、分片上传怎么实现？
+  - 前端用 file.slice 把文件切成固定大小 chunk，计算文件 hash，上传前调用校验接口查询文件或分片是否已存在；如果完整文件已存在就秒传，如果部分分片已存在就只上传缺失分片；上传完成后通知服务端按分片序号合并。断点续传的核心是服务端保存已上传分片状态，前端失败后重新计算 hash 并查询已上传分片，继续传剩余部分。实际项目还要做并发控制、进度统计、暂停恢复、失败重试、取消上传、hash 校验和临时分片清理。
 6. TCP 和 UDP 的区别是什么？QUIC 解决了什么问题？
 7. HTTPS 握手过程是什么？
 8. 强缓存和协商缓存有什么区别？
@@ -537,6 +582,34 @@
       等待 2MSL 后
       CLOSED
     ```
+12. 如何实现一个并发池，假设100个任务，要求同时刻最多5个并发？
+  ```ts
+  async function requestPool<T, R>(
+    tasks: T[],
+    limit: number,
+    request: (task: T, index: number) => Promise<R>,
+  ): Promise<R[]> {
+    const result: R[] = [];
+    let nextIndex = 0;
+
+    async function worker() {
+      while (nextIndex < tasks.length) {
+        const task = tasks[nextIndex];
+        const index = nextIndex;
+        nextIndex++;
+
+        const res = await request(task, index);
+        result.push(res);
+      }
+    }
+
+    const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => worker());
+
+    await Promise.all(workers);
+
+    return result;
+  }
+  ```
 
 # 架构设计
 1. 如何设计一个中后台权限系统？
