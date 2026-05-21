@@ -194,8 +194,16 @@
     }
     ```
   - 作用：减少请求次数，减轻服务端压力，提升体验（只对用户停顿后的关键词生成建议）
-
-
+20. AI问答页面抖动怎么处理？
+  - 问题来源：流式输出、Markdown二次渲染、图片加载。
+  - 解决方案：流失内容用requestAnimationFrame 优化；Markdown 在流式阶段轻量渲染，结束后再完整渲染；图片、代码块、卡片提前占位。
+21. MCP对比Function call？
+  - Function Call 是模型的一种工具调用能力，开发者把函数名、参数 schema 和描述传给模型，模型判断是否调用，并返回结构化参数，真正执行由业务代码完成。
+  - MCP 是一套标准协议，用来把外部工具、资源和提示词接入 AI 应用。它通过 MCP Server 暴露 tools、resources、prompts，MCP Client 负责发现和调用。Function Call 更适合少量明确工具，MCP 更适合复杂 Agent 场景下接入多个系统。两者可以配合使用：MCP 提供工具，Function Call 让模型选择工具
+  - MCP过程
+    - 用户提问->LLM接收->MCP Client连接MCP Server，获取MCP能力传给LLM->LLM判断需要调用工具，返回Tool Call->MCP Client调用MCP Server->MCP Server返回结果->MCP Client发给模型->模型回答
+22. LLM是如何生产出来的？
+  - 数据收集、清洗去重 -> 分词Tokenization -> 预训练Pretraning（根据前面的 token，预测下一个 token）-> Transformer(Embedding向量化，机率预测，关注上下文) -> 指令微调(喂问题-答案的样本) ->偏好对齐 RLHF / DPO（回答得更符合人类偏好） -> 安全训练 _> 评测。
 # 浏览器与 JS 底层
 1. 请简单介绍一下你对 ES6 中 Promise 的理解，以及它如何解决回调地狱问题？
   - Promise 是异步编程的一种解决方案，有三种状态：pending（进行中）、fulfilled（已成功）和 rejected（已失败）。
@@ -284,7 +292,7 @@
     - CORS：服务端设置响应头 Access-Control-Allow-Origin。最推荐。
     - 开发环境代理，相当于起一个后台服务器，代理请求。
     - 生产环境用nginx设置反向代理。
-    - JSONP: <script>标签不受同源策略影响，但只支持GET
+    - JSONP: script标签不受同源策略影响，但只支持GET
 11. LocalStorage 和 SessionStorage、Cookie 的区别？
     - localStorage：长期存储，除非主动清除。（～5M）
     - sessionStorage：会话级存储，页面标签页关闭后清除。（～5M）
@@ -299,9 +307,46 @@
   4. 如果构造函数返回对象，则返回该对象；否则返回新创建的对象
   ```
 14. 数组去重
+  - 示例
+  ```ts
+    // 1. Set
+    const result = [...new Set(arr)]
+
+    // 2. 如果是对象数组，通常用 Map 按唯一字段去重
+    const result = [...new Map(list.map(item => [item.id, item])).values()]
+  ```
 15. 排序
+  - 冒泡排序、选择排序、插入排序、快速排序、归并排序、堆排序
+  - 冒泡排序: 相邻两个元素比较，大的往后冒
+    ```ts
+    function bubbleSort(arr) {
+      const result = [...arr]
+
+      for (let i = 0; i < result.length - 1; i++) {
+        for (let j = 0; j < result.length - 1 - i; j++) {
+          if (result[j] > result[j + 1]) {
+            ;[result[j], result[j + 1]] = [result[j + 1], result[j]]
+          }
+        }
+      }
+
+      return result
+    }
+    ```
+  - 选择排序：每一轮找最小值，放到当前轮的起始位置
+
+
 16. js的数据类型？类型判断？
+  - 数据类型：基本类型（string、number、boolean、null、undefined、symbol）、对象（object）、数组（array）、函数（function）
+  - 本质上除了基本类型，其他大多都属于 object
+  - 类型判断常用 typeof、instanceof、Object.prototype.toString.call() 和 Array.isArray()。typeof 适合判断基本类型，但 typeof null 是 object，数组和对象也无法区分；instanceof 判断原型链关系，但[] instanceof Object = true有问题；最通用的是 Object.prototype.toString.call()，可以准确判断大多数内置类型
 17. call、apply、bind的区别？
+  - call 和 apply 都会立即调用函数，只是传参方式不同，call 是参数列表，apply 是参数数组；bind 不会立即执行，而是返回一个绑定了 this 和部分参数的新函数
+18. 浏览器不同 tab 之间如何通信？
+  - BroadcastChannel、localStorage、postMessage
+19. 讲讲重排和重绘？
+  - 重排是元素尺寸、位置或文档流发生变化，浏览器需要重新计算布局；重绘是布局没变，只是颜色、背景、阴影等视觉样式变化，需要重新绘制。
+  - 优化：批量操作DOM、样式，避免频繁读取布局属性，使用虚拟列表减少DOM数量。
 
 # Vue
 1. Vue 3 响应式原理是什么？reactive、ref、effect 如何配合依赖收集？
@@ -448,6 +493,131 @@
   - Proxy 代理原对象、记录你做了哪些修改、只复制被修改过的对象路径、最后生成新的不可变 state
 14. useState、useReducer、useContext、useMemo、useCallback 原理？
   - React Hooks 的底层依赖 Fiber。每个函数组件对应一个 Fiber，Fiber 的 memoizedState 上保存一条 Hook 链表，React 按 Hook 调用顺序找到对应 Hook。useState 和 useReducer 都通过 Hook 的 updateQueue 保存更新，下一次 render 时依次计算新 state；useState 本质是内置 reducer 的 useReducer。useContext 在 render 时读取最近 Provider 的值，Provider value 变化会让消费者更新。useMemo 在 Hook 中保存 [value, deps]，依赖没变返回缓存值；useCallback 本质是缓存函数引用，等价于 useMemo(() => fn, deps)。这也是 Hooks 不能写在条件或循环里的原因，因为调用顺序一变，Hook 链表就会对应错位。
+15. Reconciler 如何遍历 fiber 树？
+  - React Reconciler 遍历 Fiber 树时，不是用递归，而是用链表结构 + 循环模拟深度优先遍历
+  - beginWork：向下遍历，类似先序。completeWork：向上回溯，类似后序
+  - 举例
+    ```text
+    A
+    ├── B
+    │   ├── D
+    │   └── E
+    └── C
+    beginWork(A)
+    beginWork(B)
+    beginWork(D)
+    completeWork(D)
+    beginWork(E)
+    completeWork(E)
+    completeWork(B)
+    beginWork(C)
+    completeWork(C)
+    completeWork(A)
+    ```
+  - beginWork: 判断是否需要更新，是则重新执行render函数，对比更新（diff），返回该child
+  - completeWork: 生成真实 DOM，并收集副作用
+  - commit: 更新dom，执行副作用（执行 useLayoutEffect，异步执行 useEffect等）
+16. 讲讲message channel ？
+  - React Scheduler 在浏览器环境中会使用 MessageChannel 这类宏任务机制来安排下一轮工作。Fiber 把渲染拆成一个个工作单元，Scheduler 在一轮 work loop 中用 performance.now() 判断时间片是否用完，也就是 shouldYield；如果时间片到了，就暂停当前 render，把进度保存在 nextUnitOfWork 上，再通过 MessageChannel.port.postMessage 安排下一轮宏任务继续执行。它不用 setTimeout 是因为延迟和节流更明显，也不主要用 requestIdleCallback，因为 React 需要自己控制优先级、过期时间和任务恢复
+  - message channel是浏览器提供的宏任务机制。channel.port1.onmessage+channel.port2.postMessage
+  - setTimeout：有最小延迟>=4ms，且可能会被微任务阻塞
+  - requestIdleCallback：兼容性一般，空闲时间不可预测，优先级控制不足
+  - Promise.then: 微任务会在浏览器渲染前全部执行完, 会阻塞渲染
+17. 讲一下react中常用的hooks？
+  - useState: 状态管理.setState 创建 update，放入 updateQueue,React 调度当前 Fiber 重新 render
+    ```ts 
+    const [count, setCount] = useState(0) 
+    ```
+  - useReducer: 复杂状态管理
+    ```ts
+        function reducer(state, action) {
+      switch (action.type) {
+        case 'increment':
+          return { count: state.count + 1 }
+        default:
+          return state
+      }
+    }
+
+    const [state, dispatch] = useReducer(reducer, { count: 0 })
+    ```
+  - useEffect: 用于副作用，比如请求、订阅、定时器、事件监听。render 阶段收集 effect，commit 阶段 DOM 更新完成后异步执行 effect，下一次 effect 执行前，先执行上一次 cleanup，组件卸载时执行 cleanup
+    ```ts
+    useEffect(() => {
+      const timer = setInterval(() => {}, 1000)
+
+      return () => {
+        clearInterval(timer)
+      }
+    }, [])
+    ```
+  - useLayoutEffect: 同 useEffect，但会在 DOM 更新完成后，浏览器绘制之前同步执行。适合读取布局、同步修改 DOM、避免页面闪烁，但阻塞渲染
+  - useRef：保存可变值或 DOM 引用。
+    - ref.current 可变。修改 ref.current 不会触发重新渲染。多次 render 之间保持同一个引用
+    - 拿 DOM。存定时器 id。保存最新 state，解决闭包旧值问题。保存实例对象
+  - useMemo：缓存计算结果。浅比较。deps 不变，直接返回缓存值。deps 变化，重新执行函数。
+  - useCallback：缓存函数引用。浅比较。等价于：useMemo(() => fn, deps)
+  - useContext：Provoder提供value，Consumer读取最近的value。
+    - useContext读取context.currentValue，读取最近的Provider的值（依靠Provider进入/退出时的压栈和出栈实现）
+    - 当组件调用 useContext(Context) 时，会订阅该Context，记录到fiber.dependencies。
+    - 值变化时会调用Object.js浅比较，然后 React 会在 Provider 的子树里查找哪些 Fiber 依赖了这个 Context
+      ```text
+      Provider value 变化
+        ↓
+      遍历 Provider 子树
+        ↓
+      找到 fiber.dependencies 里包含该 Context 的组件
+        ↓
+      给这些 Fiber 标记更新优先级 lanes
+        ↓
+      调度它们重新 render
+      ```
+18. Fiber 节点结构
+  ```ts
+  type Fiber = {
+    // ===== 基础标识 =====
+    tag: WorkTag
+    key: null | string
+    elementType: any
+    type: any
+    stateNode: any
+
+    // ===== Fiber 树结构 =====
+    return: Fiber | null
+    child: Fiber | null
+    sibling: Fiber | null
+    index: number
+
+    // ===== Ref =====
+    ref: any
+
+    // ===== Props =====
+    pendingProps: any // 本次 render 接收到的新 props
+    memoizedProps: any // 上一次 render 已经生效的 props
+
+    // ===== State =====
+    memoizedState: any // hooks 链表
+    updateQueue: UpdateQueue | null // 等待处理的更新队列
+
+    // ===== Context / Dependencies =====
+    dependencies: Dependencies | null
+
+    // ===== Mode =====
+    mode: TypeOfMode
+
+    // ===== Effect =====
+    flags: Flags  // 副作用
+    subtreeFlags: Flags
+    deletions: Fiber[] | null
+
+    // ===== Lanes 优先级 =====
+    lanes: Lanes  // 当前 Fiber 自己有哪些待处理更新
+    childLanes: Lanes
+
+    // ===== 双缓冲 =====
+    alternate: Fiber | null
+  }
+  ```
 
 # TypeScript
 1. interface 和 type 有什么区别？分别适合什么场景？
@@ -498,6 +668,30 @@
         .pnpm 目录：用硬链接引用 store 文件
         node_modules 顶层：用符号链接暴露项目直接依赖
       ```
+12. 依赖预构建
+  - 原理：开发环境依靠esbuild，扫描并转换，生成包装函数。
+  - 示例
+    ```text
+    // vite.config.ts
+    export default defineConfig({
+      optimizeDeps: {
+        include: ['some-lib']
+      }
+    })
+    ```
+13. git merge 和 rebase 有什么区别？
+  - merge 会保留分支历史，必要时生成一个 merge commit，不改写已有提交。
+  - rebase 会把当前分支的提交重新应用到目标分支后面，使历史更线性，但会改写 commit hash。（rebase 是改当前分支）
+  - 公共分支一般用 merge，个人开发分支可以用 rebase 整理历史。
+  - reabse危险？
+    - commit的hash会变，rebase远程分支后，别人基于旧历史开发，造成混乱。force push还会覆盖他人代码
+14. 讲讲i18n及其原理？
+  - 原理: 把页面文案抽成 key -> 每种语言维护一份语言包 -> 当前语言 locale 保存在全局状态、cookie 或 localStorage -> 渲染时通过 t(key) 找到当前语言对应文案 -> 切换语言时更新 locale，触发页面重新渲染
+  - 优化：语言包按需加载，兜底语言
+15. 进程、线程、协程
+  - 进程：操作系统分配资源的基本单位。不同进程互相隔离互不影响。有独立的内存空间。
+  - 线程：线程运行在进程内部，是 CPU 执行任务的基本单位。有独立的调用栈等。共享内存等资源，但容易出现锁、竞态。
+  - 协程：协程更轻量，通常由程序或语言运行时调度，不是操作系统内核直接调度。
 
 # 性能优化
 1. 首屏性能优化完整链路是什么？
@@ -511,6 +705,9 @@
 8. 大型 SPA 如何优化路由切换速度？
 9. 如何减少主线程阻塞？Web Worker 适合处理什么问题？
 10. 前端性能监控体系应该采集哪些指标？
+11. HMR工作原理？
+  - HMR = Hot Module Replacement（热模块替换），在应用运行时替换、添加、删除模块，无需完全刷新页面
+  - 启动devServer，建立WebSocket连接 -> 监听文件变化 -> 编译发生变化的模块 -> 通过WebSocket通知浏览器 -> 浏览器请求更新后的模块 -> 替换旧模块，执行更新
 
 # 安全
 1. XSS、CSRF、点击劫持分别是什么？如何防御？
@@ -634,3 +831,16 @@
 8. 你如何设计前端项目的可观测性？
 9. 你如何和后端、产品、设计协作解决复杂问题？
 10. 你如何带新人或做技术分享？
+
+# 技术选型
+1. Vue和React深度对比，怎么选型？
+  - 对比
+    - 核心定位：Vue是配套齐全的渐进式框架，React更像是负责UI渲染的库。
+    - 更新机制不同：Vue是响应式驱动，通过Proxy代理，track收集依赖，trigger触发更新；React是状态驱动，通过setState重新执行Render函数。
+    - 写法不同：Vue用template、script、style组合，结构更清晰；React用JSX，抽象能力更强。
+    - 性能和生态：性能差距不大，Vue生态更统一，React生态更丰富。
+  - 选型
+    - 适合Vue的场景
+      - 团队希望规范统一、成员前端经验参差不齐
+    - 适合React的场景
+      - 需要高度灵活的抽象、复杂交互应用
